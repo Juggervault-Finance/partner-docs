@@ -41,11 +41,7 @@
       {
         "group": "Protocol",
         "pages": [
-          "protocol/overview",
-          "protocol/factory-and-token",
-          "protocol/sale",
-          "protocol/dividends",
-          "protocol/accounts"
+          "protocol/overview"
         ]
       },
       {

@@ -10,7 +10,7 @@ Requires Node.js 20.17 or newer.
 
 ```bash
 npm i -g mint
-cd docs-site
+cd partner-docs
 mint dev
 ```
 

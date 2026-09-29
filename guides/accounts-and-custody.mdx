@@ -52,7 +52,7 @@ Partner API purchase routes are issuer-directed bank transfer. See [Purchase](/f
 | Partner API purchase intent | The partner integration | Bank transfer of the share price plus the execution fee, under the issuer's payment instructions | Credited to the investor's portfolio record when the offering operator settles the intent |
 | Account balance | The investor, after sign-in, in the application | Cash already held in the Juggervault account | Issued to the platform account at purchase |
 
-Account-balance purchase is not a Partner API request. Dividends and buyback, where an offering provides them, apply to units issued to the platform account. A bank-settled portfolio credit is a separate record. Read either result with `GET /investors/{externalUserId}/holdings`. That response contains units and share of the project. It does not contain an account address. The contract rules are in [Protocol](/protocol/overview), [Sale](/protocol/sale), and [Accounts](/protocol/accounts).
+Account-balance purchase is not a Partner API request. Dividends and buyback, where an offering provides them, apply to units issued to the platform account. A bank-settled portfolio credit is a separate record. Read either result with `GET /investors/{externalUserId}/holdings`. That response contains units and share of the project. It does not contain an account address. How issuance treats that credit is described in [Protocol](/protocol/overview).
 
 ## Scope of this API
 
