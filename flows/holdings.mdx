@@ -1,0 +1,44 @@
+---
+title: "Holdings"
+description: "Read an investor's units and share of each project."
+---
+
+`GET /investors/{externalUserId}/holdings` returns the linked investor's holdings. The key requires `holdings:read`.
+
+The investor must already be linked. A missing link returns `404`.
+
+## Response
+
+```json
+{
+  "externalUserId": "partner-user-123",
+  "userId": "0b1c2d3e-0000-4000-8000-000000000001",
+  "holdings": [
+    {
+      "assetId": "0b1c2d3e-0000-4000-8000-000000000003",
+      "name": "Example project",
+      "tokenSymbol": "EXM",
+      "units": "100",
+      "ownership": {
+        "totalUnits": 1000,
+        "investorUnits": 100,
+        "investorPct": 10,
+        "mode": "personal",
+        "segments": [
+          { "id": "you", "label": "Your share", "units": 100, "pct": 10 }
+        ]
+      }
+    }
+  ]
+}
+```
+
+`units` is that investor's holding. `ownership.investorPct` is the investor's share of the project when the total is known, and `null` when it is not. `segments` is the same allocation shown in the portfolio: the investor, other investors by quantity only, units retained by the originator, reserved units, and units available for sale. Segment `id` is one of `you`, `other_investors`, `originator_retained`, `reserved`, `unsold_primary`, or `rest_of_project`.
+
+Other investors are not identified. The response does not include an account address. See [Accounts and custody](/guides/accounts-and-custody).
+
+## Catalog and listing
+
+`GET /catalog` lists offerings that are listed for sale or have an active primary sale. Each item includes price, currency, units available, units sold, units remaining, and an `ownership` allocation for the offering. It does not include a personal holding. The key requires `catalog:read`.
+
+`GET /listings/{assetId}` returns one offering: the asset summary, `ownership`, and `onChain` when a supply figure is available. `onChain` contains `totalSupply` and `isSaleActive`, or is `null`. An unknown offering returns `404` and `error` is `Listing not found.`

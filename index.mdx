@@ -1,0 +1,61 @@
+---
+title: "Introduction"
+description: "Programmatic access for brokers distributing Juggervault primary offerings."
+---
+
+The Juggervault Partner API enables a broker to link investors, submit identity data for platform verification, open registration, record a primary purchase, and read holdings.
+
+Juggervault is the platform. The broker is the distribution partner. Each investor has one account under full platform custody. A purchase is recorded only for that investor, after identity verification, account opening, and registration. Units are not delivered to an address supplied by the partner. See [Accounts and custody](/guides/accounts-and-custody). The issuance contracts are described in [Protocol](/protocol/overview).
+
+## Base URL
+
+```
+https://api.juggervault.finance/api/partner/v1
+```
+
+The path is always `/api/partner/v1`. Use the API origin issued with the key when it differs from the host above.
+
+## Capabilities
+
+<CardGroup cols={2}>
+  <Card title="Read the catalog" icon="list" href="/quickstart">
+    List offerings that are open for distribution, including units and share of the project.
+  </Card>
+  <Card title="Link an investor" icon="user-plus" href="/flows/link-investor">
+    Create or attach an investor profile using the partner user identifier.
+  </Card>
+  <Card title="Submit identity data" icon="id-card" href="/flows/import-identity">
+    Submit identity data collected by the partner. Juggervault verifies the investor before registration.
+  </Card>
+  <Card title="Open a purchase" icon="receipt" href="/flows/purchase">
+    Create a primary purchase intent and submit the bank payment reference.
+  </Card>
+</CardGroup>
+
+## Order of operations
+
+<Steps>
+  <Step title="Authenticate">
+    Send the broker API key on every request. See [Authentication](/guides/authentication).
+  </Step>
+  <Step title="Link the investor">
+    `POST /investors/link` with your `externalUserId` and the investor's email.
+  </Step>
+  <Step title="Identity verification">
+    `POST /investors/{externalUserId}/kyc-import` may be used to submit identity data already collected. The investor must complete verification on Juggervault.
+  </Step>
+  <Step title="Registration">
+    `POST /assets/{assetId}/registration` after verification is approved.
+  </Step>
+  <Step title="Purchase and holdings">
+    Create a purchase intent, submit the bank reference, then read holdings after settlement.
+  </Step>
+</Steps>
+
+## Operating rules
+
+- Linking an investor does not complete identity verification and does not open the platform account.
+- A partner attestation does not approve the investor. Juggervault records its own decision.
+- Government identity numbers and the Tax Identification Number are unique on the platform. A second email cannot be used for an identity that is already on file.
+- Registration and purchase use the same conditions as the Juggervault application. A purchase requires the linked investor.
+- The routes on this site are the complete Partner API. The API does not open an account, accept an address, or return a key.

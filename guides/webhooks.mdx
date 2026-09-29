@@ -1,0 +1,74 @@
+---
+title: "Webhooks"
+description: "Signed notices when identity, registration, purchase, or holdings change."
+---
+
+Juggervault posts JSON to the webhook URL stored on the broker. An administrator sets that URL and the signing secret under Admin, Partner API. Delivery runs only when Partner API is enabled and both the URL and the secret are set.
+
+## Events
+
+| `type` | When it is sent |
+| --- | --- |
+| `kyc.approved` | Identity verification is approved |
+| `kyc.rejected` | Identity verification is rejected |
+| `registration.approved` | The offering operator approves the registration request. The operator must also complete registration before purchase. |
+| `purchase.settled` | A primary purchase settles |
+| `holding.updated` | Sent with `purchase.settled` for that sale, with the unit change |
+
+## Envelope
+
+```json
+{
+  "id": "delivery-uuid",
+  "type": "purchase.settled",
+  "createdAt": "2026-09-12T12:00:00.000Z",
+  "data": {
+    "externalUserId": "partner-user-123",
+    "userId": "0b1c2d3e-0000-4000-8000-000000000001",
+    "saleId": "0b1c2d3e-0000-4000-8000-000000000004",
+    "assetId": "0b1c2d3e-0000-4000-8000-000000000003",
+    "tokenAmount": 100,
+    "purchasePrice": 10100,
+    "currency": "USD",
+    "intentId": "0b1c2d3e-0000-4000-8000-000000000005"
+  }
+}
+```
+
+Every `data` object includes `userId`. `externalUserId` is the partner identifier when the investor was linked through the Partner API. It is `null` when the notice is sent only because of a referral, with no partner link.
+
+| Event | Other `data` fields |
+| --- | --- |
+| `kyc.approved` | `kycStatus` (`approved`) |
+| `kyc.rejected` | `kycStatus` (`rejected`), `rejectionReason` (string or `null`) |
+| `registration.approved` | `assetId`, `assetName` |
+| `purchase.settled` | `saleId`, `assetId`, `tokenAmount`, `purchasePrice`, `currency`, and `intentId` when the purchase came from a Partner API intent |
+| `holding.updated` | `saleId`, `assetId`, `deltaUnits` |
+
+`tokenAmount`, `purchasePrice`, and `deltaUnits` are decimal amounts. A settled purchase is not posted twice for the same broker, event type, and `saleId`. `holding.updated` uses that same `saleId`.
+
+## Headers
+
+| Header | Value |
+| --- | --- |
+| `Content-Type` | `application/json` |
+| `X-Juggervault-Event` | The event type, for example `purchase.settled` |
+| `X-Juggervault-Signature` | HMAC-SHA256 hex digest of the raw body, keyed with the webhook signing secret |
+
+Verify the signature against the raw request body before parsing the JSON. Reject the delivery when the signature does not match.
+
+```javascript
+const crypto = require("crypto");
+
+function isValidSignature(rawBody, signature, secret) {
+  const expected = crypto.createHmac("sha256", secret).update(rawBody, "utf8").digest("hex");
+  const left = Buffer.from(expected);
+  const right = Buffer.from(signature || "");
+  if (left.length !== right.length) return false;
+  return crypto.timingSafeEqual(left, right);
+}
+```
+
+## Delivery
+
+Respond with a `2xx` status after the event is accepted. Any other status, or a network failure, is retried. Juggervault attempts delivery up to 3 times. The interval between attempts increases and is limited to 60 seconds.

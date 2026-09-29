@@ -1,0 +1,70 @@
+---
+title: "Quickstart"
+description: "Link an investor with the first authenticated Partner API request."
+---
+
+This call confirms the key and creates or returns the investor link.
+
+## Prerequisites
+
+A broker API key is required. An administrator issues it under Admin, Brokers, Partner API. The full key is shown once. The broker must be active, and Partner API must be enabled for that broker.
+
+Set the origin and key in the shell. Use the origin on the key record when it differs from the host below.
+
+```bash
+export JUGGERVAULT_API_BASE="https://api.juggervault.finance/api/partner/v1"
+export JUGGERVAULT_API_KEY="jvpk_your_prefix_your_secret"
+```
+
+## Link an investor
+
+```bash
+curl -sS -X POST "$JUGGERVAULT_API_BASE/investors/link" \
+  -H "Authorization: Bearer $JUGGERVAULT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "externalUserId": "partner-user-123",
+    "email": "investor@example.com",
+    "firstName": "Ada",
+    "lastName": "Okoye"
+  }'
+```
+
+A newly created user profile returns `201`. An existing link for the same `externalUserId` returns `200`. This request does not open the platform account. See [Accounts and custody](/guides/accounts-and-custody).
+
+```json
+{
+  "investor": {
+    "userId": "0b1c2d3e-0000-4000-8000-000000000001",
+    "externalUserId": "partner-user-123",
+    "linked": true,
+    "created": true,
+    "registrationUrl": "https://tokenization.juggervault.finance/register?ref=CODE",
+    "kycVerified": false,
+    "kycStatus": null,
+    "investorProfileRequired": true,
+    "continueUrl": "https://tokenization.juggervault.finance/kyc"
+  }
+}
+```
+
+`registrationUrl` and `continueUrl` use the Juggervault application host, not the API host.
+
+## Read the catalog
+
+The key must include the `catalog:read` scope.
+
+```bash
+curl -sS "$JUGGERVAULT_API_BASE/catalog" \
+  -H "Authorization: Bearer $JUGGERVAULT_API_KEY"
+```
+
+## Failures
+
+| Status | Meaning |
+| --- | --- |
+| `401` | The key is missing, incorrectly formed, or not recognized. |
+| `403` | Partner API is disabled for the broker, or the key does not include the required scope. |
+| `400` | The body failed validation. The `errors` array contains the field messages. |
+
+See [Errors](/guides/errors).

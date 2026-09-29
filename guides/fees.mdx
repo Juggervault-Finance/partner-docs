@@ -1,0 +1,25 @@
+---
+title: "Fees"
+description: "Platform execution fee on a primary purchase, and the broker share of that fee."
+---
+
+Each completed primary purchase carries a platform execution fee charged on top of the share price. The standard rate is 1% of the share consideration. The rate in force is the rate configured for that environment. Confirm it on the broker agreement.
+
+If the share consideration is 10,000, the investor pays 10,100. The issuer receives the full consideration. The 100 is the platform fee.
+
+## Fee allocation
+
+| Origin | Broker share | Juggervault retains |
+| --- | --- | --- |
+| Partner API, or the investor's first purchase from a referral | 0.7% of the purchase, invoiced outside the platform | 0.3% |
+| Direct purchase with no broker origin | None | The full 1% |
+
+`POST /assets/{assetId}/purchase-intents` records purchase channel `partner_api` and the broker identifier on the intent and on the settled sale. That record marks the purchase as broker-originated.
+
+The standard broker share is 70% of the 1% fee, which is 0.7% of the share consideration. Where a different broker share is agreed, the percentage configured for that environment applies.
+
+## Separate charges
+
+Placement fees, ordinarily 2% to 4% of capital raised, are invoiced offline to the asset owner. They are separate from the execution fee.
+
+The Partner API purchase intent is a bank-transfer instruction. The amount to pay is the consideration plus the execution fee. Account-balance purchases made by the investor after sign-in follow the same fee, collected with the payment.

@@ -1,0 +1,30 @@
+---
+title: "Investor account"
+description: "How a broker-linked investor becomes a Juggervault account that can register and purchase."
+---
+
+`POST /investors/link` creates a Juggervault user profile when the email is new, or attaches `externalUserId` to an existing user with that email. The profile may have no password until the investor sets one. Linking does not open the platform account.
+
+Linking does not verify identity and does not register the investor for an offering.
+
+## Investor actions after linking
+
+<Steps>
+  <Step title="Identity verification">
+    The investor opens `continueUrl`, which points to identity verification until Juggervault approves the record. A prior `kyc-import` supplies the data for that form. It does not approve the record.
+  </Step>
+  <Step title="Registration">
+    After approval, the partner may call `POST /assets/{assetId}/registration`, or the investor may register in the application. The offering operator must complete registration before purchase.
+  </Step>
+  <Step title="Password">
+    After the first purchase settles, the investor receives email. If they have no password, they use Forgot password with the linked email, set a password, and sign in. That step also marks the email verified.
+  </Step>
+</Steps>
+
+## One identity per account
+
+NIN, BVN, passport number, driver's licence number, voter's card number, and Tax Identification Number are unique on the platform. If a later verification uses an identity already stored under another email, the API returns `409` and `IDENTITY_OWNED_BY_EXISTING_ACCOUNT`. A second profile is not created. The investor signs in with the email that already holds the identity.
+
+## Where units are held
+
+Purchased units are recorded on the investor's Juggervault account. Custody is full platform custody: Juggervault holds the controlling key. Linking does not open the account. After identity verification is approved, the investor signs in and Juggervault opens the account. See [Accounts and custody](/guides/accounts-and-custody).

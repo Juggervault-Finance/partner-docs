@@ -1,0 +1,48 @@
+---
+title: "Link an investor"
+description: "Create or attach an investor profile using the partner external user identifier."
+---
+
+Submit `POST /investors/link` before identity import, registration, purchase, or holdings. The key must include `investors:write`.
+
+## Request
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `externalUserId` | Yes | The partner's stable identifier for this investor. Use the same value on later requests. |
+| `email` | Yes | The investor's email. Matching is case-insensitive. |
+| `firstName` | No | Stored on the user profile when the profile is created. |
+| `lastName` | No | Stored on the user profile when the profile is created. |
+| `phoneNumber` | No | Stored on the user profile when the profile is created. The value must be a valid phone number. |
+
+```json
+{
+  "externalUserId": "partner-user-123",
+  "email": "investor@example.com",
+  "firstName": "Ada",
+  "lastName": "Okoye"
+}
+```
+
+## Response
+
+The body is `{ "investor": { ... } }`.
+
+| Field | Meaning |
+| --- | --- |
+| `created` | `true` when this call created the user. `false` when the link already existed. |
+| `linked` | `true` when the external id is attached to a Juggervault user. |
+| `registrationUrl` | Application registration link that includes the broker referral code. |
+| `kycVerified` | Whether Juggervault has approved identity verification. |
+| `kycStatus` | `pending`, `under_review`, `approved`, `rejected`, or `null` if no record exists. |
+| `continueUrl` | Identity verification until approval, then the investor dashboard. |
+
+`201` means a new user profile was created. `200` means this `externalUserId` was already linked. A repeated request with the same `externalUserId` returns `200`. The request does not open the platform account.
+
+## Conflicts
+
+`409` with `This investor account is already linked under a different external user id.` means that email is already linked to this broker under another `externalUserId`. Continue to use the original identifier.
+
+`404` on later calls means `Investor link not found.` Link the investor before those calls.
+
+Read the link with `GET /investors/{externalUserId}`. That route accepts `investors:write` or `holdings:read`. The response includes `email` and `linkedAt` plus the same gate fields. It does not return identity numbers.

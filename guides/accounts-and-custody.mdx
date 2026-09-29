@@ -1,0 +1,59 @@
+---
+title: "Accounts and custody"
+description: "Custody type, the requirement for an investor, and how the platform account is opened."
+---
+
+Each investor has one Juggervault account. Units and cash for that investor are recorded on that account. The Partner API does not create the account, does not accept an address, and does not return one.
+
+A transaction requires that investor. Juggervault does not record a purchase until the investor has been linked, identity verification is approved, the platform account is open, and registration for the offering is complete.
+
+## Custody type
+
+Custody is full platform custody, segregated by investor.
+
+| Term | Position |
+| --- | --- |
+| Custody type | Full platform custody |
+| Account | One account per investor. Holdings are not pooled. |
+| Controlling key | Held by Juggervault in the platform vault. The investor does not co-sign. The broker does not co-sign. |
+| Investor access | Sign-in to the same account. The investor does not receive a private key. |
+| Partner access | `externalUserId`, status, and holdings. The partner does not receive a key or an account address. |
+| Omnibus or nominee custody | Not offered. |
+| Broker custody | Not offered. |
+
+An investor may link an external account in the application. That option is separate from partner distribution. Registration opened through the Partner API, and purchases settled from it, use the platform account. The API does not accept a destination address.
+
+## How the account is opened
+
+<Steps>
+  <Step title="Link">
+    `POST /investors/link` creates or attaches the user profile. It does not open the account.
+  </Step>
+  <Step title="Identity verification">
+    The investor completes verification on Juggervault. Submitted identity data does not approve the investor and does not open the account. The account remains unavailable until verification is approved.
+  </Step>
+  <Step title="Account activation">
+    After approval, the investor signs in. Juggervault then opens the platform account. If activation does not complete, the investor opens Account in the application and submits activation again. The Partner API has no request for this step.
+  </Step>
+  <Step title="Registration">
+    `POST /assets/{assetId}/registration` uses the platform account. If the account is not open, the response is `400` and `error` is `Complete account setup in Juggervault before requesting registration.`
+  </Step>
+  <Step title="Settlement">
+    If a broker-originated purchase settles, identity verification is already approved, and the account was not opened, Juggervault attempts to open it at settlement. Settlement does not replace account opening before registration.
+  </Step>
+</Steps>
+
+## Where a purchase is recorded
+
+Partner API purchase routes are issuer-directed bank transfer. See [Purchase](/flows/purchase).
+
+| Path | Who starts it | What the investor pays | Where units are recorded |
+| --- | --- | --- | --- |
+| Partner API purchase intent | The partner integration | Bank transfer of the share price plus the execution fee, under the issuer's payment instructions | Credited to the investor's portfolio record when the offering operator settles the intent |
+| Account balance | The investor, after sign-in, in the application | Cash already held in the Juggervault account | Issued to the platform account at purchase |
+
+Account-balance purchase is not a Partner API request. Dividends and buyback, where an offering provides them, apply to units issued to the platform account. A bank-settled portfolio credit is a separate record. Read either result with `GET /investors/{externalUserId}/holdings`. That response contains units and share of the project. It does not contain an account address. The contract rules are in [Protocol](/protocol/overview), [Sale](/protocol/sale), and [Accounts](/protocol/accounts).
+
+## Scope of this API
+
+These pages are the complete Partner API: catalog, investor link, identity submission and status, registration, bank-transfer purchase intents, holdings, and outbound webhooks. Session, account, cash, and administration routes are outside the Partner API. A broker key is not valid for those routes.

@@ -1,0 +1,63 @@
+---
+title: "Purchase"
+description: "Create a bank-transfer purchase intent and submit the payment reference."
+---
+
+These routes record a primary purchase that the investor pays by bank transfer to the issuer. They do not debit cash held in the Juggervault account, and they do not accept an account address. The key requires `purchase:write`. The investor must already be linked and registered for the offering.
+
+When the offering operator settles the intent, units are credited to the investor's portfolio record. That credit is separate from a purchase the investor makes from account balance in the application. Dividends and buyback, where the offering provides them, apply to units issued to the platform account. See [Accounts and custody](/guides/accounts-and-custody).
+
+The offering must be accepting primary purchase intents.
+
+## Create an intent
+
+`POST /assets/{assetId}/purchase-intents`
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `externalUserId` | Yes | Linked investor. |
+| `tokenAmount` | Yes | Units to purchase. Must be greater than zero, and within the offering minimum, maximum, and remaining units. |
+| `paymentAmount` | No | Amount the investor will pay. If omitted and the offering has a price, the platform sets consideration plus the execution fee. |
+| `currency` | No | Defaults to the offering currency, or `USD`. |
+| `investorNote` | No | Note from the investor. |
+
+```json
+{
+  "externalUserId": "partner-user-123",
+  "tokenAmount": 100
+}
+```
+
+`201` returns `{ "intent": { ... } }`. The intent identifier is `intent.id`. The initial `status` is `pending_payment`. `paymentMethod` is `bank_transfer`. `purchaseChannel` is `partner_api`. `sourceBrokerId` is the broker identifier.
+
+Decimal amounts may be returned as strings. Parse them as numbers.
+
+## Submit the bank reference
+
+After the investor has paid, call `POST /purchase-intents/{intentId}/payment`.
+
+```json
+{
+  "bankReference": "NIP-2026-0001",
+  "investorNote": "Paid from the named account."
+}
+```
+
+`bankReference` is required. The response is `{ "intent": { ... } }` with `status` `payment_submitted`.
+
+The intent must belong to an investor linked to this broker. Otherwise the response is `403` and `error` is `Purchase intent is not associated with this partner.` An unknown identifier returns `404`.
+
+## Status values
+
+| `status` | Meaning |
+| --- | --- |
+| `pending_payment` | The intent is open. A payment reference has not been submitted. |
+| `payment_submitted` | The bank reference is on file. Operator review is pending. |
+| `confirmed` | The operator has confirmed the payment. |
+| `settled` | The purchase has been settled. |
+| `cancelled` | The intent has been cancelled. |
+| `rejected` | The intent has been rejected. |
+
+Read the intent with `GET /purchase-intents/{intentId}`. The body is `{ "intent", "externalUserId" }`.
+
+Settlement does not occur on the payment submission. When settlement is complete, Juggervault sends [purchase.settled](/guides/webhooks).

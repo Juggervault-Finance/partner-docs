@@ -1,0 +1,54 @@
+---
+title: "Authentication"
+description: "API keys, request headers, and scopes for the Partner API."
+---
+
+Every Partner API request requires a broker API key. The broker must be active, and Partner API must be enabled on that broker.
+
+## Send the key
+
+Use one of these headers:
+
+```http
+Authorization: Bearer jvpk_<prefix>_<secret>
+```
+
+```http
+X-Api-Key: jvpk_<prefix>_<secret>
+```
+
+`Authorization: ApiKey jvpk_<prefix>_<secret>` is also accepted.
+
+The key format is `jvpk_`, an 8-character prefix, an underscore, then the secret. A value that does not match that form is rejected as invalid.
+
+Juggervault issues the full key once, when an administrator creates it under Admin, Brokers, Partner API. Store it as a secret. The prefix may be displayed later. The secret cannot be retrieved again.
+
+## Scopes
+
+A key authorizes only the routes included in its scopes. A missing scope returns `403`.
+
+| Scope | Access |
+| --- | --- |
+| `catalog:read` | Catalog and a single listing |
+| `investors:write` | Link an investor, read an investor, read identity status |
+| `kyc:write` | Import identity data, read identity status |
+| `registration:write` | Create a registration request |
+| `registration:read` | Read registration status |
+| `purchase:write` | Create a purchase intent, submit payment proof, read an intent |
+| `holdings:read` | Read an investor and that investor's holdings |
+
+Some reads accept either of two scopes:
+
+| Route | Accepted scopes |
+| --- | --- |
+| `GET /investors/{externalUserId}` | `investors:write` or `holdings:read` |
+| `GET /investors/{externalUserId}/kyc` | `kyc:write` or `investors:write` |
+
+## Failures
+
+| Status | `error` |
+| --- | --- |
+| `401` | `Partner API key is required.` |
+| `401` | `Invalid partner API key.` |
+| `403` | `Partner API access is not enabled for this broker.` |
+| `403` | `Missing required partner scope: <scope>.` |

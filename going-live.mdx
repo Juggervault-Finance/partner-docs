@@ -1,0 +1,33 @@
+---
+title: "Going live"
+description: "Checks to complete before a broker uses a production API key."
+---
+
+Complete these checks before investors are linked on a production key.
+
+<AccordionGroup>
+  <Accordion title="Key handling">
+    Store the key in a secrets manager. It is displayed once at creation. If the key is disclosed, rotate it in Admin. Send it only as `Authorization: Bearer` or `X-Api-Key`.
+  </Accordion>
+  <Accordion title="Scopes">
+    Grant only the scopes the integration calls. Catalog reads, investor linking, identity import, registration, purchase, and holdings are separate scopes. See [Authentication](/guides/authentication).
+  </Accordion>
+  <Accordion title="Identity">
+    `kyc-import` stores a pending record. It does not approve the investor. Registration and purchase remain unavailable until Juggervault approves identity verification. A partner approval flag is not accepted.
+  </Accordion>
+  <Accordion title="Registration acknowledgements">
+    Registration requires `consents.platformTerms` set to `true`. Send the other acknowledgement fields the investor has accepted. See [Registration](/flows/registration).
+  </Accordion>
+  <Accordion title="Account and custody">
+    Custody is full platform custody, segregated by investor. Do not collect a private key or a destination address. The investor must complete identity verification and sign in before registration, so that Juggervault opens the account. See [Accounts and custody](/guides/accounts-and-custody).
+  </Accordion>
+  <Accordion title="Purchases">
+    `POST /purchase-intents` opens a bank-transfer intent. It does not debit a Juggervault cash balance. Submit `bankReference` after the investor pays. Settlement is completed by the offering operator.
+  </Accordion>
+  <Accordion title="Webhooks">
+    Set an HTTPS webhook URL and signing secret in Admin, under Partner API. Verify `X-Juggervault-Signature` against the raw body before accepting the event. Return a `2xx` status. See [Webhooks](/guides/webhooks).
+  </Accordion>
+  <Accordion title="Account claim">
+    A linked investor may not have a password yet. After the first settled purchase, the investor sets a password from Forgot password on the application, using the linked email, then signs in.
+  </Accordion>
+</AccordionGroup>

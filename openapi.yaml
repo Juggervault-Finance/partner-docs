@@ -1,0 +1,967 @@
+openapi: 3.0.3
+info:
+  title: Juggervault Partner API
+  version: "1.0.0"
+  description: |
+    Broker distribution API for Juggervault primary offerings.
+    The path prefix `/api/partner/v1` is included in the server URL.
+servers:
+  - url: https://api.juggervault.finance/api/partner/v1
+    description: Documented public origin. Use the origin issued with your API key if it differs.
+security:
+  - bearerAuth: []
+  - apiKeyHeader: []
+tags:
+  - name: Catalog
+  - name: Investors
+  - name: Identity
+  - name: Registration
+  - name: Purchase
+  - name: Holdings
+paths:
+  /catalog:
+    get:
+      tags: [Catalog]
+      operationId: getCatalog
+      summary: List offerings
+      description: Offerings that are listed for sale or have an active primary sale. Requires `catalog:read`.
+      responses:
+        "200":
+          description: Catalog entries.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [catalog]
+                properties:
+                  catalog:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CatalogItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /listings/{assetId}:
+    get:
+      tags: [Catalog]
+      operationId: getListing
+      summary: Get one offering
+      description: Offering summary, ownership picture, and supply snapshot when available. Requires `catalog:read`.
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      responses:
+        "200":
+          description: Offering.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [listing]
+                properties:
+                  listing:
+                    $ref: "#/components/schemas/Listing"
+        "404":
+          description: Listing not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Listing not found.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /investors/link:
+    post:
+      tags: [Investors]
+      operationId: linkInvestor
+      summary: Link an investor
+      description: |
+        Creates a Juggervault user or attaches `externalUserId` to the user with that email.
+        Does not complete identity verification. Requires `investors:write`.
+        `201` when a user is created. `200` when the external id is already linked.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinkInvestorRequest"
+      responses:
+        "200":
+          description: Existing link.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvestorEnvelope"
+        "201":
+          description: New user created and linked.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvestorEnvelope"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "409":
+          description: The email is already linked under a different external user id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: This investor account is already linked under a different external user id.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /investors/{externalUserId}:
+    get:
+      tags: [Investors]
+      operationId: getInvestor
+      summary: Get a linked investor
+      description: Requires `investors:write` or `holdings:read`. Does not return identity numbers.
+      parameters:
+        - $ref: "#/components/parameters/ExternalUserId"
+      responses:
+        "200":
+          description: Investor link and verification gates.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [investor]
+                properties:
+                  investor:
+                    allOf:
+                      - $ref: "#/components/schemas/InvestorGates"
+                      - type: object
+                        properties:
+                          email:
+                            type: string
+                            format: email
+                          linkedAt:
+                            type: string
+                            format: date-time
+        "404":
+          $ref: "#/components/responses/InvestorNotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /investors/{externalUserId}/kyc-import:
+    post:
+      tags: [Identity]
+      operationId: importInvestorKyc
+      summary: Import identity data
+      description: |
+        Stores a pending identity record. Does not approve the investor.
+        Requires `kyc:write`. `201` when the record is created. `200` when an existing unverified record is updated.
+      parameters:
+        - $ref: "#/components/parameters/ExternalUserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KycImportRequest"
+      responses:
+        "200":
+          description: Existing record updated. Re-verification is required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KycEnvelope"
+        "201":
+          description: Record created. Re-verification is required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KycEnvelope"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "403":
+          description: Sanctions screening blocked the record, or the key lacks `kyc:write`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Verification is already approved, or the identity belongs to another account.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /investors/{externalUserId}/kyc:
+    get:
+      tags: [Identity]
+      operationId: getInvestorKyc
+      summary: Read identity status
+      description: Gates only. No identity numbers. Requires `kyc:write` or `investors:write`.
+      parameters:
+        - $ref: "#/components/parameters/ExternalUserId"
+      responses:
+        "200":
+          description: Identity status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KycStatusEnvelope"
+        "404":
+          $ref: "#/components/responses/InvestorNotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /assets/{assetId}/registration:
+    post:
+      tags: [Registration]
+      operationId: createRegistration
+      summary: Create a registration request
+      description: |
+        Same gates as registration in the application. Requires `registration:write`.
+        Identity verification, investor profile, and accredited self-certification must already be complete.
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationRequest"
+      responses:
+        "201":
+          description: Registration request created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationEnvelope"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "403":
+          description: Identity, investor profile, or accredited self-certification is incomplete.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Offering or investor link was not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /assets/{assetId}/registration/{externalUserId}:
+    get:
+      tags: [Registration]
+      operationId: getRegistration
+      summary: Read registration status
+      description: |
+        Requires `registration:read`.
+        Returns `200` with `status` and `waitlistId` set to `null` when the investor has no request for this offering.
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+        - $ref: "#/components/parameters/ExternalUserId"
+      responses:
+        "200":
+          description: Registration status, or null when no request exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationEnvelope"
+        "404":
+          $ref: "#/components/responses/InvestorNotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /assets/{assetId}/purchase-intents:
+    post:
+      tags: [Purchase]
+      operationId: createPurchaseIntent
+      summary: Create a purchase intent
+      description: |
+        Opens a bank-transfer primary purchase. Does not debit account cash.
+        Requires `purchase:write`. Stamps `purchaseChannel` as `partner_api`.
+      parameters:
+        - $ref: "#/components/parameters/AssetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchaseIntentRequest"
+      responses:
+        "201":
+          description: Intent created with status `pending_payment`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntentEnvelope"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "404":
+          description: Offering or investor link was not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /purchase-intents/{intentId}/payment:
+    post:
+      tags: [Purchase]
+      operationId: submitPurchasePayment
+      summary: Submit a bank reference
+      description: Records the investor's bank payment reference. Requires `purchase:write`. Does not settle the purchase.
+      parameters:
+        - $ref: "#/components/parameters/IntentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bankReference]
+              properties:
+                bankReference:
+                  type: string
+                  maxLength: 255
+                investorNote:
+                  type: string
+      responses:
+        "200":
+          description: Intent updated to `payment_submitted`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntentEnvelope"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "403":
+          description: The intent is not linked to this broker, or the key lacks `purchase:write`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Purchase intent not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Purchase intent not found.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /purchase-intents/{intentId}:
+    get:
+      tags: [Purchase]
+      operationId: getPurchaseIntent
+      summary: Get a purchase intent
+      description: Requires `purchase:write`. The intent must belong to an investor linked to this broker.
+      parameters:
+        - $ref: "#/components/parameters/IntentId"
+      responses:
+        "200":
+          description: Intent and the partner external user id.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/IntentEnvelope"
+                  - type: object
+                    required: [externalUserId]
+                    properties:
+                      externalUserId:
+                        type: string
+        "403":
+          description: The intent is not linked to this broker.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Purchase intent not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /investors/{externalUserId}/holdings:
+    get:
+      tags: [Holdings]
+      operationId: getHoldings
+      summary: Get holdings
+      description: Units and share of each project for the linked investor. Requires `holdings:read`.
+      parameters:
+        - $ref: "#/components/parameters/ExternalUserId"
+      responses:
+        "200":
+          description: Holdings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Holdings"
+        "404":
+          $ref: "#/components/responses/InvestorNotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Broker API key, `jvpk_<prefix>_<secret>`.
+    apiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: Broker API key, `jvpk_<prefix>_<secret>`.
+  parameters:
+    AssetId:
+      name: assetId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ExternalUserId:
+      name: externalUserId
+      in: path
+      required: true
+      description: Your identifier for the investor, from the link call.
+      schema:
+        type: string
+    IntentId:
+      name: intentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: API key is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: Invalid partner API key.
+    Forbidden:
+      description: Partner API is disabled, or the key lacks the required scope.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ValidationFailed:
+      description: Request validation failed, or a business rule rejected the input.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationError"
+    InvestorNotFound:
+      description: No investor is linked for this external user id.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: Investor link not found.
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        owningEmail:
+          type: string
+          nullable: true
+        owningEmailMasked:
+          type: string
+          nullable: true
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+    Decimal:
+      description: JSON number or decimal string.
+      oneOf:
+        - type: number
+        - type: string
+    OwnershipSegment:
+      type: object
+      properties:
+        id:
+          type: string
+          enum: [you, other_investors, originator_retained, reserved, unsold_primary, rest_of_project]
+        label:
+          type: string
+        units:
+          $ref: "#/components/schemas/Decimal"
+        pct:
+          $ref: "#/components/schemas/Decimal"
+    Ownership:
+      type: object
+      nullable: true
+      properties:
+        totalUnits:
+          $ref: "#/components/schemas/Decimal"
+        investorUnits:
+          $ref: "#/components/schemas/Decimal"
+        investorPct:
+          type: number
+          nullable: true
+        mode:
+          type: string
+          enum: [personal, offer, simple]
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnershipSegment"
+    CatalogItem:
+      type: object
+      properties:
+        assetId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        tokenName:
+          type: string
+        tokenSymbol:
+          type: string
+        isGloballyListed:
+          type: boolean
+        isPrimarySaleActive:
+          type: boolean
+        primarySalePrice:
+          $ref: "#/components/schemas/Decimal"
+        primarySaleCurrency:
+          type: string
+        primarySaleTotalAvailable:
+          $ref: "#/components/schemas/Decimal"
+        primarySaleSold:
+          $ref: "#/components/schemas/Decimal"
+        primarySaleRemaining:
+          $ref: "#/components/schemas/Decimal"
+        primarySaleStartDate:
+          type: string
+          nullable: true
+        primarySaleEndDate:
+          type: string
+          nullable: true
+        originatorRetainedUnits:
+          nullable: true
+          description: Units retained by the originator.
+          oneOf:
+            - $ref: "#/components/schemas/Decimal"
+        reservedAllocation:
+          nullable: true
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              units:
+                $ref: "#/components/schemas/Decimal"
+              unlockRule:
+                type: string
+        issuingEntity:
+          type: string
+          nullable: true
+        jurisdiction:
+          type: string
+          nullable: true
+        ownership:
+          $ref: "#/components/schemas/Ownership"
+    ListingAsset:
+      type: object
+      properties:
+        assetId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        tokenName:
+          type: string
+        tokenSymbol:
+          type: string
+        primarySalePrice:
+          $ref: "#/components/schemas/Decimal"
+        primarySaleCurrency:
+          type: string
+        primarySaleTotalAvailable:
+          $ref: "#/components/schemas/Decimal"
+        primarySaleSold:
+          $ref: "#/components/schemas/Decimal"
+        primarySaleRemaining:
+          $ref: "#/components/schemas/Decimal"
+        originatorRetainedUnits:
+          nullable: true
+          oneOf:
+            - $ref: "#/components/schemas/Decimal"
+        reservedAllocation:
+          nullable: true
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              units:
+                $ref: "#/components/schemas/Decimal"
+              unlockRule:
+                type: string
+        issuingEntity:
+          type: string
+          nullable: true
+        jurisdiction:
+          type: string
+          nullable: true
+        managerEntityLegalName:
+          type: string
+          nullable: true
+          description: Manager legal name recorded on the offering, when present.
+        managerLicenseNote:
+          type: string
+          nullable: true
+          description: Licence note recorded on the offering, when present.
+    Listing:
+      type: object
+      properties:
+        asset:
+          $ref: "#/components/schemas/ListingAsset"
+        ownership:
+          $ref: "#/components/schemas/Ownership"
+        onChain:
+          nullable: true
+          description: Supply snapshot used for share of the project. Null when unavailable.
+          type: object
+          properties:
+            totalSupply:
+              $ref: "#/components/schemas/Decimal"
+            isSaleActive:
+              type: boolean
+    InvestorGates:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        externalUserId:
+          type: string
+        linked:
+          type: boolean
+        created:
+          type: boolean
+        registrationUrl:
+          type: string
+          format: uri
+        kycVerified:
+          type: boolean
+        kycStatus:
+          type: string
+          nullable: true
+          enum: [pending, under_review, approved, rejected]
+        investorProfileRequired:
+          type: boolean
+        accreditedInvestorRequired:
+          type: boolean
+        investorProfileComplete:
+          type: boolean
+        claimsAccreditedInvestor:
+          type: boolean
+        continueUrl:
+          type: string
+          format: uri
+    InvestorEnvelope:
+      type: object
+      required: [investor]
+      properties:
+        investor:
+          $ref: "#/components/schemas/InvestorGates"
+    LinkInvestorRequest:
+      type: object
+      required: [externalUserId, email]
+      properties:
+        externalUserId:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+    KycImportRequest:
+      type: object
+      required: [dateOfBirth, nationality, primaryIdType, tin]
+      properties:
+        dateOfBirth:
+          type: string
+          format: date
+          description: Investor must be at least 18.
+        nationality:
+          type: string
+          enum: [Nigerian]
+        primaryIdType:
+          type: string
+          enum: [nin, bvn, passport, driver_license, voters_card]
+        tin:
+          type: string
+          description: 8 to 20 letters, digits, or hyphens. Required in addition to the primary identity document.
+        nin:
+          type: string
+        bvn:
+          type: string
+        passportNumber:
+          type: string
+        driverLicenseNumber:
+          type: string
+        votersCardNumber:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        partnerReference:
+          type: string
+        attestation:
+          type: object
+          properties:
+            provider:
+              type: string
+            verifiedAt:
+              type: string
+              format: date-time
+            level:
+              type: string
+    KycEnvelope:
+      type: object
+      required: [kyc]
+      properties:
+        kyc:
+          allOf:
+            - $ref: "#/components/schemas/InvestorGates"
+            - type: object
+              properties:
+                kycId:
+                  type: string
+                  format: uuid
+                requiresReVerification:
+                  type: boolean
+                nextStep:
+                  type: string
+    KycStatusEnvelope:
+      type: object
+      required: [kyc]
+      properties:
+        kyc:
+          allOf:
+            - $ref: "#/components/schemas/InvestorGates"
+            - type: object
+              properties:
+                kycId:
+                  type: string
+                  format: uuid
+                  nullable: true
+                partnerImportReceived:
+                  type: boolean
+                requiresReVerification:
+                  type: boolean
+    RegistrationRequest:
+      type: object
+      required: [externalUserId, consents]
+      properties:
+        externalUserId:
+          type: string
+        notes:
+          type: string
+        consents:
+          type: object
+          required: [platformTerms]
+          properties:
+            riskDisclosure:
+              type: boolean
+            offeringDocuments:
+              type: boolean
+            transferRestrictions:
+              type: boolean
+            platformTerms:
+              type: boolean
+            accreditedDeclaration:
+              type: boolean
+    RegistrationEnvelope:
+      type: object
+      required: [registration]
+      properties:
+        registration:
+          type: object
+          properties:
+            waitlistId:
+              type: string
+              format: uuid
+              nullable: true
+            status:
+              type: string
+              nullable: true
+              enum: [pending, approved, rejected, whitelisted]
+              description: "`whitelisted` means registration is complete and the investor may purchase."
+            assetId:
+              type: string
+              format: uuid
+            externalUserId:
+              type: string
+            userId:
+              type: string
+              format: uuid
+            reviewedAt:
+              type: string
+              format: date-time
+              nullable: true
+    PurchaseIntentRequest:
+      type: object
+      required: [externalUserId, tokenAmount]
+      properties:
+        externalUserId:
+          type: string
+        tokenAmount:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+        paymentAmount:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+        currency:
+          type: string
+        investorNote:
+          type: string
+    Intent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        assetId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        paymentMethod:
+          type: string
+          enum: [bank_transfer, on_chain]
+        status:
+          type: string
+          enum: [pending_payment, payment_submitted, confirmed, settled, cancelled, rejected]
+        sourceBrokerId:
+          type: string
+          nullable: true
+        purchaseChannel:
+          type: string
+          enum: [partner_api, direct]
+        tokenAmount:
+          $ref: "#/components/schemas/Decimal"
+        paymentAmount:
+          nullable: true
+          oneOf:
+            - type: number
+            - type: string
+        currency:
+          type: string
+        bankReference:
+          type: string
+          nullable: true
+        investorNote:
+          type: string
+          nullable: true
+        opsNote:
+          type: string
+          nullable: true
+          description: Operational note. Do not display it to the investor.
+        confirmedById:
+          type: string
+          format: uuid
+          nullable: true
+          description: Operator who confirmed the intent, when recorded.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        confirmedAt:
+          type: string
+          format: date-time
+          nullable: true
+        settledAt:
+          type: string
+          format: date-time
+          nullable: true
+    IntentEnvelope:
+      type: object
+      required: [intent]
+      properties:
+        intent:
+          $ref: "#/components/schemas/Intent"
+    Holding:
+      type: object
+      properties:
+        assetId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        tokenSymbol:
+          type: string
+        units:
+          $ref: "#/components/schemas/Decimal"
+        ownership:
+          $ref: "#/components/schemas/Ownership"
+    Holdings:
+      type: object
+      required: [externalUserId, userId, holdings]
+      properties:
+        externalUserId:
+          type: string
+        userId:
+          type: string
+          format: uuid
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Holding"

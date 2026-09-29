@@ -1,0 +1,45 @@
+---
+title: "Accounts"
+description: "The platform account, the owner key, and how a sponsored action is submitted."
+---
+
+Each investor has one platform account. Units and cash for that investor are recorded on that account. Holdings are not pooled. See [Accounts and custody](/guides/accounts-and-custody).
+
+The account has two parts.
+
+| Part | Meaning |
+| --- | --- |
+| Owner key | Signs for the account. Juggervault holds this key in the platform vault. The investor does not receive it. |
+| Account address | The account that holds units and cash. This is the account registered on an offering. The Partner API does not return it. |
+
+Custody is full platform custody. The investor does not co-sign. The broker does not co-sign. The offer operator does not co-sign. An external account may be linked in the application. That path is not used for Partner API registration or settlement.
+
+Holding the owner key does not bypass registration. A purchase still requires the account to be registered on that offering.
+
+## Account contract
+
+`JuggervaultSafeAccountFactory` creates one account per owner. The account address can be calculated before the account is deployed. If the account already exists, creation returns that same account.
+
+| Function | Who may call | Effect |
+| --- | --- | --- |
+| `createAccount` | The platform | Deploys the account, or returns it if it already exists. |
+| `validateUserOp` | The network entry point | Accepts the action only when the owner key signed it. |
+| `execute` | The network entry point | Runs the sponsored action. |
+| `execTransaction` | Owner key | Runs an action when the account pays the network token itself. This is not the investor path. |
+| `isValidSignature` | A contract checking a signature | Accepts a permit signed by the owner key. |
+| `changeOwner` | Current owner | Replaces the signing key. For a platform account, Juggervault is that owner. |
+| `settlePaymasterCharge` | Paymaster only | Moves cash from the account to settle a processing fee charged in cash. |
+
+## Processing fee
+
+`JuggervaultVerifyingPaymaster` pays the network processing fee from a platform deposit, or collects an equivalent amount in an allowed cash token. The platform signs a time-bounded approval for each action.
+
+| Mode | Effect |
+| --- | --- |
+| Sponsor | The platform pays the processing fee. |
+| Charge | Cash is set aside from the account. If the action succeeds, the used amount is collected and the rest is returned. If the action fails, the full amount is returned. |
+| Hybrid | The platform chooses sponsor or charge for that action. |
+
+The paymaster cannot change the owner key and cannot mint units. It can take cash from the account only for a processing-fee charge the account has authorized.
+
+The Partner API has no account, key, or processing-fee route.

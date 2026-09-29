@@ -1,0 +1,69 @@
+---
+title: "Errors"
+description: "Status codes and error bodies returned by the Partner API."
+---
+
+Failed requests return JSON. The message for the client is `error`. Some failures add `code` and related fields. Present `error` to the investor. Do not present a stack trace or a raw transport failure.
+
+## Status codes
+
+| Status | When |
+| --- | --- |
+| `400` | The body is invalid, or a business rule rejected the input. |
+| `401` | The API key is missing or invalid. |
+| `403` | Partner API is not enabled for the broker, the key lacks a scope, or the record is not associated with this broker. |
+| `404` | The listing, investor link, or purchase intent does not exist. |
+| `409` | The identity, link, or verification state conflicts with an existing record. |
+| `500` | The request could not be completed. Repeat the request later. |
+
+## Validation
+
+When a required field fails request validation, the body is:
+
+```json
+{
+  "error": "Validation failed",
+  "message": "Please fix the highlighted fields and try again.",
+  "errors": ["externalUserId is required"]
+}
+```
+
+`errors` is a list of field messages.
+
+## Identity already on file
+
+```json
+{
+  "error": "This identification number is already linked to an existing account (investor@example.com). Sign in with that email. If you have not set a password yet, use Forgot password on the sign-in page.",
+  "code": "IDENTITY_OWNED_BY_EXISTING_ACCOUNT",
+  "owningEmail": "investor@example.com",
+  "owningEmailMasked": "i***@example.com"
+}
+```
+
+The status is `409`. Direct the investor to the account that already holds the identity. A second profile is not created.
+
+## Identity import after approval
+
+If verification is already approved, `POST /kyc-import` returns `409`:
+
+```json
+{
+  "error": "Identity verification is already approved for this investor.",
+  "kycStatus": "approved",
+  "kycVerified": true,
+  "requiresReVerification": false
+}
+```
+
+## Registration before verification
+
+If registration is requested before identity verification is approved, the status is `403`. The body includes the gate fields (`kycVerified`, `kycStatus`, `continueUrl`) and:
+
+```json
+{
+  "error": "Identity verification is incomplete. Partner KYC import is advisory only. The investor must complete verification in Juggervault before registration."
+}
+```
+
+Other registration refusals keep the message from the registration check. See [Registration](/flows/registration).

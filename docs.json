@@ -1,0 +1,82 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Juggervault",
+  "colors": {
+    "primary": "#0066CC",
+    "light": "#0066CC",
+    "dark": "#3B9EFF"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Website",
+        "href": "https://www.juggervault.finance"
+      }
+    ]
+  },
+  "seo": {
+    "metatags": {
+      "canonical": "https://docs.juggervault.finance",
+      "description": "Partner API for broker distribution of Juggervault primary offerings."
+    }
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get started",
+        "pages": ["index", "quickstart", "going-live"]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/authentication",
+          "guides/investor-account",
+          "guides/accounts-and-custody",
+          "guides/fees",
+          "guides/webhooks",
+          "guides/errors"
+        ]
+      },
+      {
+        "group": "Protocol",
+        "pages": [
+          "protocol/overview",
+          "protocol/factory-and-token",
+          "protocol/sale",
+          "protocol/dividends",
+          "protocol/accounts"
+        ]
+      },
+      {
+        "group": "Flows",
+        "pages": [
+          "flows/link-investor",
+          "flows/import-identity",
+          "flows/registration",
+          "flows/purchase",
+          "flows/holdings"
+        ]
+      },
+      {
+        "group": "API reference",
+        "openapi": "openapi.yaml",
+        "pages": [
+          "api-reference/introduction",
+          "GET /catalog",
+          "GET /listings/{assetId}",
+          "POST /investors/link",
+          "GET /investors/{externalUserId}",
+          "POST /investors/{externalUserId}/kyc-import",
+          "GET /investors/{externalUserId}/kyc",
+          "POST /assets/{assetId}/registration",
+          "GET /assets/{assetId}/registration/{externalUserId}",
+          "POST /assets/{assetId}/purchase-intents",
+          "POST /purchase-intents/{intentId}/payment",
+          "GET /purchase-intents/{intentId}",
+          "GET /investors/{externalUserId}/holdings"
+        ]
+      }
+    ]
+  }
+}

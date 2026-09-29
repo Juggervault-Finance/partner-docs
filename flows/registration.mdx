@@ -1,0 +1,74 @@
+---
+title: "Registration"
+description: "Open a registration request for one offering after identity verification is approved."
+---
+
+`POST /assets/{assetId}/registration` submits a registration request for one linked investor and one offering. The key requires `registration:write`.
+
+The investor must already be linked. Identity verification must be approved, the investor profile must be complete, and the investor must have self-certified as accredited. Those steps are completed on Juggervault. The offering must be accepting registration and listed for sale.
+
+## Refusal
+
+The `error` values below are returned exactly as shown.
+
+| Status | `error` |
+| --- | --- |
+| `403` | `Identity verification is incomplete. Partner KYC import is advisory only. The investor must complete verification in Juggervault before registration.` |
+| `403` | `Complete your investor eligibility profile before requesting whitelist access or purchasing tokens.` |
+| `403` | `This offering is limited to investors who self-certify as accredited.` |
+| `404` | `Asset not found.` or `Investor link not found.` |
+| `400` | `This asset is not accepting registration requests.` |
+| `400` | `Registration opens after the SPV manager lists this asset for primary sale.` |
+| `400` | `Investor is already registered for this asset.` The body also includes `waitlistId` and `status`. |
+| `400` | `Complete account setup in Juggervault before requesting registration.` |
+| `400` | `Agree to the Terms of Service and Privacy Policy before continuing.` |
+| `400` | `Offering acknowledgements are required.` when `consents` is missing. |
+
+## Request
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `externalUserId` | Yes | The id from [Link an investor](/flows/link-investor). |
+| `consents` | Yes | Offering acknowledgements. `platformTerms` must be `true`. |
+| `notes` | No | Note stored with the request. If omitted, the platform records that the request came through the partner. |
+
+```json
+{
+  "externalUserId": "partner-user-123",
+  "consents": {
+    "riskDisclosure": true,
+    "offeringDocuments": true,
+    "transferRestrictions": true,
+    "platformTerms": true,
+    "accreditedDeclaration": false
+  }
+}
+```
+
+If `platformTerms` is missing or false, the response is `400` and `error` is `Agree to the Terms of Service and Privacy Policy before continuing.` Send `accreditedDeclaration: true` only when the investor makes that declaration.
+
+## Response
+
+`201` with:
+
+```json
+{
+  "registration": {
+    "waitlistId": "0b1c2d3e-0000-4000-8000-000000000002",
+    "status": "pending",
+    "assetId": "0b1c2d3e-0000-4000-8000-000000000003",
+    "externalUserId": "partner-user-123",
+    "userId": "0b1c2d3e-0000-4000-8000-000000000001"
+  }
+}
+```
+
+`status` is `pending` on creation. Later values are `approved`, `rejected`, or `whitelisted`. The value `whitelisted` means registration is complete and the investor may purchase.
+
+Approval of the request is not sufficient. The offering operator must complete registration before purchase.
+
+## Read status
+
+`GET /assets/{assetId}/registration/{externalUserId}` requires `registration:read`.
+
+If the investor has no request for that offering, the response is `200`, with `status` and `waitlistId` set to `null`. A missing investor link returns `404`.

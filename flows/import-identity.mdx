@@ -1,0 +1,59 @@
+---
+title: "Import identity"
+description: "Submit an investor identity record. Juggervault verifies it before registration."
+---
+
+`POST /investors/{externalUserId}/kyc-import` stores identity data already collected by the partner. The record remains pending. The investor is not verified. The key requires `kyc:write`.
+
+The investor must already be linked.
+
+## Request
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `dateOfBirth` | Yes | `YYYY-MM-DD`. The investor must be at least 18. |
+| `nationality` | Yes | Accepted value: `Nigerian`. |
+| `primaryIdType` | Yes | `nin`, `bvn`, `passport`, `driver_license`, or `voters_card`. TIN is not a primary identity document. |
+| `tin` | Yes | Tax Identification Number, in addition to the primary document. 8 to 20 letters, digits, or hyphens. |
+| `nin`, `bvn`, `passportNumber`, `driverLicenseNumber`, `votersCardNumber` | One | Send the field that matches `primaryIdType`. |
+| `firstName`, `lastName` | No | Updates the profile name when present. |
+| `address`, `city`, `state`, `postalCode`, `country` | No | Stored when present. |
+| `partnerReference` | No | Partner case identifier. It is stored with the import and is not returned on the status read. |
+| `attestation` | No | Optional `provider`, `verifiedAt`, and `level`. Advisory only. |
+
+```json
+{
+  "dateOfBirth": "1990-01-15",
+  "nationality": "Nigerian",
+  "primaryIdType": "nin",
+  "nin": "00000000000",
+  "tin": "00000000-0001",
+  "firstName": "Ada",
+  "lastName": "Okoye",
+  "partnerReference": "partner-case-id",
+  "attestation": {
+    "provider": "PartnerKYC",
+    "verifiedAt": "2026-01-01T00:00:00.000Z",
+    "level": "standard"
+  }
+}
+```
+
+Do not send a field that requests approval. A mutual-recognition clause in a broker agreement does not replace platform verification.
+
+## Response
+
+`201` when a new identity record is created. `200` when an existing unverified record is updated. The body is `{ "kyc": { ... } }`.
+
+`requiresReVerification` is `true`. `kycStatus` is `pending`. `continueUrl` points to identity verification. `nextStep` states that the investor must complete verification on Juggervault before registration or purchase.
+
+`GET /investors/{externalUserId}/kyc` returns the same gates without identity numbers. It accepts `kyc:write` or `investors:write`. `partnerImportReceived` is `true` after a successful import.
+
+## Refusal
+
+| Status | Case |
+| --- | --- |
+| `409` | Verification is already approved. |
+| `409` | The identity number or TIN belongs to another account. `code` is `IDENTITY_OWNED_BY_EXISTING_ACCOUNT`. |
+| `403` | Sanctions screening blocked the record. |
+| `400` | Age, nationality, TIN, or the primary identity number failed validation. |

@@ -1,0 +1,53 @@
+---
+title: "Protocol"
+description: "How Juggervault issues project units, settles a primary purchase, and records dividends and buyback."
+---
+
+Juggervault is a permissioned primary-issuance protocol. The platform decides who may invest. The contracts enforce registration, issuance, and who may sign for an account.
+
+The Partner API does not call these contracts directly. A partner records a bank-transfer purchase intent. Units issued to a platform account, and the dividends and buyback that follow them, are settled by the protocol below. See [Accounts and custody](/guides/accounts-and-custody) and [Purchase](/flows/purchase).
+
+## Contracts
+
+| Contract | Role |
+| --- | --- |
+| Asset token factory | Registers an offering after a factory-admin signature. Sets the settlement currencies, the sale, and the dividend distributor. |
+| Asset token | One contract per offering. Holds registration, freeze, pause, and the units. |
+| Sale | Opens the primary sale, mints units at purchase, and settles buyback. |
+| Dividend distributor | One distributor for every offering. Assigns a cash dividend across eligible units. |
+| Account | One platform account per investor. Units and cash for that investor sit on this account. |
+| Paymaster | Pays the network processing fee, or collects it in cash, when the platform submits an action. |
+
+The factory, the sale, and the dividend distributor can be upgraded. An asset token cannot. A new token implementation applies only to offerings created after that replacement. Existing units stay on the implementation they were issued from.
+
+## Life of an offering
+
+<Steps>
+  <Step title="Launch project shares">
+    A factory admin signs the creation payload. The factory deploys one asset token and records the offer operator as issuer.
+  </Step>
+  <Step title="Open the primary sale">
+    The offer operator authorizes the price, currency, window, and purchase limits. A factory-admin signature is also required. Opening the sale reserves capacity. It does not mint units.
+  </Step>
+  <Step title="Complete registration">
+    The offer operator registers the investor account on that asset token. An unregistered account cannot receive units.
+  </Step>
+  <Step title="Open the account">
+    Juggervault opens the platform account after identity verification and sign-in. The investor does not receive a key. See [Accounts](/protocol/accounts).
+  </Step>
+  <Step title="Purchase">
+    An account-balance purchase pulls the settlement currency and mints the units to that account. A Partner API bank transfer is recorded on the platform ledger and does not mint. See [Sale](/protocol/sale).
+  </Step>
+  <Step title="Dividend and buyback">
+    Dividends and buyback follow units minted to the account. See [Dividends](/protocol/dividends).
+  </Step>
+</Steps>
+
+## What the protocol refuses
+
+| Action | Refused when |
+| --- | --- |
+| Purchase | The account is not registered, the sale is closed, or the size is outside the minimum or maximum. |
+| Transfer | Either account is frozen, a side that is not exempt is not registered, or the token is paused. |
+| Mint | The caller is not the sale contract, or the mint would exceed the maximum supply. |
+| Buyback settlement | The caller is not the offer operator, or the request is no longer pending. |
