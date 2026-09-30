@@ -9,14 +9,16 @@ If the share consideration is 10,000, the investor pays 10,100. The issuer recei
 
 ## Fee allocation
 
+The broker share is 70% of the 1% fee, which is 0.7% of the share consideration. Juggervault retains the other 0.3%. Where a different broker share is agreed, the percentage configured for that environment applies. The broker share is invoiced outside the platform.
+
 | Origin | Broker share | Juggervault retains |
 | --- | --- | --- |
-| Partner API, or the investor's first purchase from a referral | 0.7% of the purchase, invoiced outside the platform | 0.3% |
+| Partner API purchase | 0.7% of that purchase | 0.3% |
+| First completed purchase of an investor who was referred, when the purchase is not a Partner API purchase | 0.7% of that first purchase | 0.3% |
+| A later purchase by that referred investor, with no Partner API origin | None | The full 1% |
 | Direct purchase with no broker origin | None | The full 1% |
 
-`POST /assets/{assetId}/purchase-intents` records purchase channel `partner_api` and the broker identifier on the intent and on the settled sale. That record marks the purchase as broker-originated.
-
-The standard broker share is 70% of the 1% fee, which is 0.7% of the share consideration. Where a different broker share is agreed, the percentage configured for that environment applies.
+`POST /assets/{assetId}/purchase-intents` records purchase channel `partner_api` and the broker identifier on the intent and on the settled sale. Every settled Partner API purchase carries the broker share. A referral applies only to the investor's first completed purchase, and only when that purchase was not already submitted through the Partner API.
 
 ## Separate charges
 
