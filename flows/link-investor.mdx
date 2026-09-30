@@ -13,7 +13,7 @@ Submit `POST /investors/link` before identity import, registration, purchase, or
 | `email` | Yes | The investor's email. Matching is case-insensitive. |
 | `firstName` | No | Stored on the user profile when the profile is created. |
 | `lastName` | No | Stored on the user profile when the profile is created. |
-| `phoneNumber` | No | Stored on the user profile when the profile is created. The value must be a valid phone number. |
+| `phoneNumber` | No | Stored when the profile is created. Send a local number starting with 0, or an international number starting with +. An invalid number returns `Enter a valid phone number.` |
 
 ```json
 {
@@ -37,7 +37,7 @@ The body is `{ "investor": { ... } }`.
 | `kycStatus` | `pending`, `under_review`, `approved`, `rejected`, or `null` if no record exists. |
 | `continueUrl` | Identity verification until approval, then the investor dashboard. |
 
-`201` means a new user profile was created. `200` means this `externalUserId` was already linked. A repeated request with the same `externalUserId` returns `200`. The request does not open the platform account.
+`201` means a new user profile was created, and `created` is `true`. `200` means either the email already belonged to a Juggervault user, or this `externalUserId` was already linked. In both `200` cases `created` is `false` and `linked` is `true`. Use `externalUserId` on later calls in either case. The request does not open the platform account. Names and phone are stored only when the profile is created.
 
 ## Conflicts
 

@@ -42,10 +42,13 @@ The path is always `/api/partner/v1`. Use the API origin issued with the key whe
     `POST /investors/link` with your `externalUserId` and the investor's email.
   </Step>
   <Step title="Identity verification">
-    `POST /investors/{externalUserId}/kyc-import` may be used to submit identity data already collected. The investor must complete verification on Juggervault.
+    `POST /investors/{externalUserId}/kyc-import` may be used to submit identity data already collected. The investor must finish verification in the application, including investor eligibility and an accredited self-certification. There is no Partner API field for those two steps.
+  </Step>
+  <Step title="Open the account">
+    After approval, the investor sets a password from Forgot password on the sign-in page if none exists, then signs in. Juggervault opens the platform account at sign-in. Registration fails until that account exists.
   </Step>
   <Step title="Registration">
-    `POST /assets/{assetId}/registration` after verification is approved.
+    `POST /assets/{assetId}/registration` after verification is approved and the platform account is open. Purchase is available only after the offering operator completes registration. The status is then `whitelisted`.
   </Step>
   <Step title="Purchase and holdings">
     Create a purchase intent, submit the bank reference, then read holdings after settlement.

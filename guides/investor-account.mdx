@@ -11,13 +11,13 @@ Linking does not verify identity and does not register the investor for an offer
 
 <Steps>
   <Step title="Identity verification">
-    The investor opens `continueUrl`, which points to identity verification until Juggervault approves the record. A prior `kyc-import` supplies the data for that form. It does not approve the record.
+    The investor opens `continueUrl`, which points to identity verification until Juggervault approves the record. A prior `kyc-import` supplies the data for that form. It does not approve the record. On that same page the investor completes investor eligibility and self-certifies as accredited. Both are required before registration. The Partner API cannot submit them.
+  </Step>
+  <Step title="Password and sign-in">
+    A new profile has no password. Before registration, the investor uses Forgot password with the linked email, sets a password, and signs in. Sign-in opens the platform account and marks the email verified. Registration returns `Complete account setup in Juggervault before requesting registration.` until that account exists.
   </Step>
   <Step title="Registration">
-    After approval, the partner may call `POST /assets/{assetId}/registration`, or the investor may register in the application. The offering operator must complete registration before purchase.
-  </Step>
-  <Step title="Password">
-    After the first purchase settles, the investor receives email. If they have no password, they use Forgot password with the linked email, set a password, and sign in. That step also marks the email verified.
+    After approval and sign-in, the partner may call `POST /assets/{assetId}/registration`, or the investor may register in the application. The offering operator must complete registration before purchase. The status is then `whitelisted`.
   </Step>
 </Steps>
 

@@ -3,7 +3,7 @@ title: "Purchase"
 description: "Create a bank-transfer purchase intent and submit the payment reference."
 ---
 
-These routes record a primary purchase that the investor pays by bank transfer to the issuer. They do not debit cash held in the Juggervault account, and they do not accept an account address. The key requires `purchase:write`. The investor must already be linked and registered for the offering.
+These routes record a primary purchase that the investor pays by bank transfer to the issuer. They do not debit cash held in the Juggervault account, and they do not accept an account address. The key requires `purchase:write`. The investor must already be linked. Registration for the offering must be complete: `status` is `whitelisted`. Approval alone is not enough.
 
 When the offering operator settles the intent, units are credited to the investor's portfolio record. That credit is separate from a purchase the investor makes from account balance in the application. Dividends and buyback, where the offering provides them, apply to units issued to the platform account. See [Accounts and custody](/guides/accounts-and-custody).
 
@@ -28,9 +28,13 @@ The offering must be accepting primary purchase intents.
 }
 ```
 
-`201` returns `{ "intent": { ... } }`. The intent identifier is `intent.id`. The initial `status` is `pending_payment`. `paymentMethod` is `bank_transfer`. `purchaseChannel` is `partner_api`. `sourceBrokerId` is the broker identifier.
+`201` returns `{ "intent": { ... } }`. The intent identifier is `intent.id`. The initial `status` is `pending_payment`. `paymentMethod` is `bank_transfer`. `purchaseChannel` is `partner_api`. `sourceBrokerId` is the broker identifier. `paymentAmount` is the amount to pay: the share consideration plus the execution fee when the platform calculated it.
+
+The response does not include a bank account. Collect the issuer's payment instructions separately, then ask the investor to pay `paymentAmount` in `currency`.
 
 Decimal amounts may be returned as strings. Parse them as numbers.
+
+If registration is not complete, the status is `403` and `error` is `Complete registration is required before submitting a purchase intent for this asset.` If the offering is not accepting intents, the status is `400` and `error` is `This asset is not accepting primary purchase intents at this time.`
 
 ## Submit the bank reference
 
@@ -43,7 +47,7 @@ After the investor has paid, call `POST /purchase-intents/{intentId}/payment`.
 }
 ```
 
-`bankReference` is required. The response is `{ "intent": { ... } }` with `status` `payment_submitted`.
+`bankReference` is required. The response is `{ "intent": { ... } }` with `status` `payment_submitted`. Submit this only while `status` is `pending_payment`. Any other status returns `400` and `error` is `Payment proof can only be submitted while the intent is awaiting payment.`
 
 The intent must belong to an investor linked to this broker. Otherwise the response is `403` and `error` is `Purchase intent is not associated with this partner.` An unknown identifier returns `404`.
 

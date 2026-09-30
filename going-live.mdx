@@ -28,6 +28,6 @@ Complete these checks before investors are linked on a production key.
     Set an HTTPS webhook URL and signing secret in Admin, under Partner API. Verify `X-Juggervault-Signature` against the raw body before accepting the event. Return a `2xx` status. See [Webhooks](/guides/webhooks).
   </Accordion>
   <Accordion title="Account claim">
-    A linked investor may not have a password yet. After the first settled purchase, the investor sets a password from Forgot password on the application, using the linked email, then signs in.
+    A linked investor may not have a password yet. After identity verification is approved, and before registration, the investor opens Forgot password on the sign-in page, uses the linked email, sets a password, and signs in. Sign-in opens the platform account. Registration returns `400` until that account exists. A later purchase email does not replace this step.
   </Accordion>
 </AccordionGroup>

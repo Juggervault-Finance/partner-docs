@@ -30,7 +30,7 @@ curl -sS -X POST "$JUGGERVAULT_API_BASE/investors/link" \
   }'
 ```
 
-A newly created user profile returns `201`. An existing link for the same `externalUserId` returns `200`. This request does not open the platform account. See [Accounts and custody](/guides/accounts-and-custody).
+A newly created user profile returns `201`, with `created` set to `true`. `200` means the user already existed, or this `externalUserId` was already linked. In both `200` cases `created` is `false` and `linked` is `true`. This request does not open the platform account. See [Accounts and custody](/guides/accounts-and-custody).
 
 ```json
 {

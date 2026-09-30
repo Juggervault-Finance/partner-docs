@@ -33,7 +33,7 @@ The investor must already be linked. A missing link returns `404`.
 }
 ```
 
-`units` is that investor's holding. `ownership.investorPct` is the investor's share of the project when the total is known, and `null` when it is not. `segments` is the same allocation shown in the portfolio: the investor, other investors by quantity only, units retained by the originator, reserved units, and units available for sale. Segment `id` is one of `you`, `other_investors`, `originator_retained`, `reserved`, `unsold_primary`, or `rest_of_project`.
+`units` is that investor's holding on the portfolio record. A bank-settled Partner API purchase appears here. Dividends and buyback follow units issued to the platform account, not this portfolio credit alone. See [Protocol](/protocol/overview). `ownership.investorPct` is the investor's share of the project when the total is known, and `null` when it is not. `segments` is the same allocation shown in the portfolio: the investor, other investors by quantity only, units retained by the originator, reserved units, and units available for sale. Segment `id` is one of `you`, `other_investors`, `originator_retained`, `reserved`, `unsold_primary`, or `rest_of_project`.
 
 Other investors are not identified. The response does not include an account address. See [Accounts and custody](/guides/accounts-and-custody).
 

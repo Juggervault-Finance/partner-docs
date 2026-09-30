@@ -81,7 +81,7 @@ paths:
       description: |
         Creates a Juggervault user or attaches `externalUserId` to the user with that email.
         Does not complete identity verification. Requires `investors:write`.
-        `201` when a user is created. `200` when the external id is already linked.
+        `201` when a user is created (`created` is true). `200` when the email already belonged to a user, or the external id was already linked (`created` is false, `linked` is true).
       requestBody:
         required: true
         content:
@@ -90,7 +90,7 @@ paths:
               $ref: "#/components/schemas/LinkInvestorRequest"
       responses:
         "200":
-          description: Existing link.
+          description: The user already existed, or this external id was already linked. `created` is false.
           content:
             application/json:
               schema:
@@ -261,7 +261,7 @@ paths:
       summary: Read registration status
       description: |
         Requires `registration:read`.
-        Returns `200` with `status` and `waitlistId` set to `null` when the investor has no request for this offering.
+        Returns `200` and `{ "registration": { ... } }`. `registration.status` and `registration.waitlistId` are null when the investor has no request for this offering.
       parameters:
         - $ref: "#/components/parameters/AssetId"
         - $ref: "#/components/parameters/ExternalUserId"
