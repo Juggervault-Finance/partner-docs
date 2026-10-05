@@ -25,7 +25,7 @@
     "groups": [
       {
         "group": "Get started",
-        "pages": ["index", "quickstart", "going-live"]
+        "pages": ["index", "guides/access-pathways", "quickstart", "going-live"]
       },
       {
         "group": "Guides",

@@ -1,0 +1,94 @@
+---
+title: "Access pathways"
+description: "The three ways an issuer uses Juggervault, set per deal."
+---
+
+Juggervault supports three pathways. The pathway is set on the deal. It determines who controls the deal, who sets the approval route, where the deal is seen, and how it is listed.
+
+The pathway is recorded when the deal is created. The issuer may choose it then, or accept the default on the company profile. After the first approval, the pathway is locked. Changing it requires the deal to be cancelled and a new deal to be created. One company may use a different pathway on each deal.
+
+The routes on this site are the Partner API. They do not include a route to set the pathway or to approve a deal.
+
+## Pathway A: Customer-owned, API only
+
+The issuer runs its own portal and uses Juggervault through the Partner API. The deal is not listed on Juggervault.
+
+| | |
+| --- | --- |
+| Who controls the deal | The customer |
+| Who sets the approval route | The customer, in the customer's own system |
+| Where the deal is seen | The customer's portal only |
+| Who approves | The customer's own approvers, in the customer's own system |
+| Billing | Per transaction and per active deal, invoiced offline |
+
+Juggervault provides Partner API access, identity verification for investors and companies, issuance, settlement, reporting, and the asset registry. Juggervault does not provide a hosted investor portal or a public listing for this pathway.
+
+A purchase recorded with the routes on this site still follows [Investor account](/guides/investor-account), [Registration](/flows/registration), and [Purchase](/flows/purchase). There is no approval route in this API.
+
+This pathway is for a licensed Issuing House or Finance House that already has its own investor portal and its own compliance operation.
+
+## Pathway B: Partner inside Juggervault
+
+The partner is embedded in Juggervault under its own brand. Users open a partner address and see only that partner's deals.
+
+Example: `https://tokenization.juggervault.finance/partner/bglafrica`
+
+| | |
+| --- | --- |
+| Who controls the deal | The partner |
+| Who sets the approval route | The partner, in Juggervault. Juggervault may override only for platform compliance or security |
+| Where the deal is seen | The partner's section only, unless the partner opts into the public listing |
+| Who approves | Partner staff with modify and approve rights, or an external approver through the email link |
+| Billing | Per transaction and per active deal, invoiced offline |
+
+Juggervault provides the hosted interface, the partner-branded section, identity verification, issuance, settlement, reporting, and the approval workflow. The partner provides the brand, the licence, the staff, and the investor relationship.
+
+Partner API access is optional. The address `/partner/bglafrica` remains the BGL Africa section.
+
+This pathway is for a licensed Issuing House or Finance House that wants the Juggervault application and does not run its own portal. BGL Africa is the current example.
+
+## Pathway C: Listed by Juggervault for the issuer
+
+The issuer does not run a portal and does not have a partner section. Juggervault lists the deal on the public listing for the issuer, under a signed mandate. The operational mailbox is `issuinghouse@juggervault.finance`.
+
+| | |
+| --- | --- |
+| Who controls the deal | Juggervault, for the issuer, under the mandate |
+| Who sets the approval route | Juggervault. The issuer approves and does not modify the route |
+| Where the deal is seen | The public Juggervault listing |
+| Who approves | The issuer, through the external approval link. Juggervault may approve for the issuer only when the mandate is on file. That approval is written to the audit log |
+| Billing | Standard Juggervault fees. See [Fees](/guides/fees) |
+
+Juggervault provides the listing, the hosted interface, investor onboarding, settlement, and reporting. The issuer provides the asset, the mandate, and approval through the external link. The Partner API is not required.
+
+This pathway is for a smaller or first-time issuer, or an asset that has no licensed Issuing House.
+
+## Comparison
+
+| Element | Pathway A | Pathway B | Pathway C |
+| --- | --- | --- | --- |
+| Customer's own portal | Yes | No | No |
+| Juggervault hosted interface | No | Yes, partner-branded | Yes, public listing |
+| Who controls the deal | Customer | Partner | Juggervault, for the issuer |
+| Who sets the approval route | Customer | Partner | Juggervault. The issuer approves |
+| Who approves | Customer's approvers | Partner staff or external link | Issuer, through the external link |
+| Where it is seen | Customer's portal only | Partner section only | Public listing |
+| Partner API | Yes | Optional | Not required |
+| Signed mandate | No | No | Yes |
+
+## Rules
+
+- The pathway is set per deal, not per company.
+- Pathway A investors are not shown in a Juggervault-hosted investor portal. They remain visible to Juggervault administration.
+- A Pathway B partner sees only that partner's deals.
+- A Pathway C deal is on the public listing.
+- Execution fees on a primary purchase are described in [Fees](/guides/fees). Pathway charges beyond that fee are invoiced offline.
+
+## Current mapping
+
+| Company | Pathway | Notes |
+| --- | --- | --- |
+| BGL Africa | Pathway B | Partner address `bglafrica` |
+| A later licensed Issuing House | Pathway B | Default when a partner address is provided |
+| A customer using the Partner API only | Pathway A | Set at onboarding |
+| A smaller or first-time issuer | Pathway C | Default when no partner is attached |
