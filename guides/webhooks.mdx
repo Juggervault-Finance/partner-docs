@@ -41,9 +41,11 @@ Every `data` object includes `userId`. `externalUserId` is the partner identifie
 | --- | --- |
 | `kyc.approved` | `kycStatus` (`approved`) |
 | `kyc.rejected` | `kycStatus` (`rejected`), `rejectionReason` (string or `null`) |
-| `registration.approved` | `assetId`, `assetName` |
-| `purchase.settled` | `saleId`, `assetId`, `tokenAmount`, `purchasePrice`, `currency`, and `intentId` when the purchase came from a Partner API intent |
-| `holding.updated` | `saleId`, `assetId`, `deltaUnits` |
+| `registration.approved` | `assetId`, `assetName`, plus the licensed pathway fields below |
+| `purchase.settled` | `saleId`, `assetId`, `tokenAmount`, `purchasePrice`, `currency`, and `intentId` when the purchase came from a Partner API intent, plus the licensed pathway fields below |
+| `holding.updated` | `saleId`, `assetId`, `deltaUnits`, plus the licensed pathway fields below |
+
+`registration.approved`, `purchase.settled`, and `holding.updated` also include `offeringProgram`, `offeringProgramLabel`, `licensedPathway`, `licensedPathwayLabel`, `licensedPartyLegalName`, `licensedPartyLicenseNote`, `trusteeLegalName`, and `trusteeLicenseNote`. A field is `null` when the deal has no value for it. These name the Issuing House or Finance House program. They are not access pathway A, B, or C. See [Access pathways](/guides/access-pathways).
 
 `tokenAmount`, `purchasePrice`, and `deltaUnits` are decimal amounts. A settled purchase is not posted twice for the same broker, event type, and `saleId`. `holding.updated` uses that same `saleId`.
 

@@ -30,6 +30,19 @@ When a required field fails request validation, the body is:
 
 `errors` is a list of field messages.
 
+## Catalog filters
+
+`GET /catalog` returns `400` and `{ "error": "..." }` when a filter is not accepted. This body has no `errors` array.
+
+| `error` |
+| --- |
+| `offeringProgram must be ipo, corporate_bond, or project_financing.` |
+| `licensedPathway must be issuing_house or finance_house.` |
+| `This offering program is not available on the selected pathway.` |
+| `licensedParty must be 255 characters or fewer.` |
+
+`selected pathway` in the third message means the licensed pathway, `issuing_house` or `finance_house`. It does not mean access pathway A, B, or C. Issuing House accepts `ipo` and `corporate_bond`. Finance House accepts `project_financing`.
+
 ## Identity already on file
 
 ```json

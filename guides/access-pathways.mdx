@@ -3,17 +3,45 @@ title: "Access pathways"
 description: "The three ways an issuer uses Juggervault, set per deal."
 ---
 
-Juggervault supports three pathways. The pathway is set on the deal. It determines who controls the deal, who sets the approval route, where the deal is seen, and how it is listed.
+Juggervault supports three access pathways. The access pathway is set on the deal. It determines who controls the deal, who sets the approval route, where the deal is seen, and how it is listed.
 
-The pathway is recorded when the deal is created. The issuer may choose it then, or accept the default on the company profile. After the first approval, the pathway is locked. Changing it requires the deal to be cancelled and a new deal to be created. One company may use a different pathway on each deal.
+The access pathway is recorded when the deal is created. The issuer may choose it then, or accept the default on the company profile. After the first approval, the access pathway is locked. Changing it requires the deal to be cancelled and a new deal to be created. One company may use a different access pathway on each deal.
 
-The routes on this site are the Partner API. They do not include a route to set the pathway or to approve a deal.
+The routes on this site are the Partner API. They do not include a route to set the access pathway or to approve a deal.
+
+## Licensed pathway
+
+Access pathway A, B, or C is not a field in the Partner API. Licensed pathway is.
+
+`GET /pathways` requires `catalog:read`. It returns both licensed pathways and the offering programs each one may carry. It does not return access pathway A, B, or C, and it does not identify the licensed pathway on one deal.
+
+| Licensed pathway | Code | Offering programs |
+| --- | --- | --- |
+| Issuing House | `issuing_house` | `ipo` (IPO), `corporate_bond` (Corporate Bond) |
+| Finance House | `finance_house` | `project_financing` (Project Financing) |
+
+`GET /catalog` accepts optional query filters `licensedPathway`, `offeringProgram`, and `licensedParty`. Omit them to receive every listed offering. `licensedParty` matches any part of the licensed party's legal name, without regard to case, and must be 255 characters or fewer. An unknown code, a program that is not allowed on that licensed pathway, or a name that is too long returns `400` and `{ "error": "..." }`. See [Errors](/guides/errors).
+
+These fields are on each catalog item, on `listing.asset`, on each registration object, and on each holding. Any of them may be `null`.
+
+| Field | Meaning |
+| --- | --- |
+| `offeringProgram` | `ipo`, `corporate_bond`, or `project_financing` |
+| `offeringProgramLabel` | IPO, Corporate Bond, or Project Financing |
+| `licensedPathway` | `issuing_house` or `finance_house` |
+| `licensedPathwayLabel` | Issuing House or Finance House |
+| `licensedPartyLegalName` | Legal name of the Issuing House or Finance House |
+| `licensedPartyLicenseNote` | License note, when recorded |
+| `trusteeLegalName` | Trustee, when the program records one |
+| `trusteeLicenseNote` | Trustee license note, when recorded |
+
+`registration.approved`, `purchase.settled`, and `holding.updated` include the same fields. See [Webhooks](/guides/webhooks).
 
 ## Pathway A: Customer-owned, API only
 
 The issuer runs its own portal and uses Juggervault through the Partner API. The deal is not listed on Juggervault.
 
-| | |
+| Item | Position |
 | --- | --- |
 | Who controls the deal | The customer |
 | Who sets the approval route | The customer, in the customer's own system |
@@ -33,7 +61,7 @@ The partner is embedded in Juggervault under its own brand. Users open a partner
 
 Example: `https://tokenization.juggervault.finance/partner/bglafrica`
 
-| | |
+| Item | Position |
 | --- | --- |
 | Who controls the deal | The partner |
 | Who sets the approval route | The partner, in Juggervault. Juggervault may override only for platform compliance or security |
@@ -41,7 +69,7 @@ Example: `https://tokenization.juggervault.finance/partner/bglafrica`
 | Who approves | Partner staff with modify and approve rights, or an external approver through the email link |
 | Billing | Per transaction and per active deal, invoiced offline |
 
-Juggervault provides the hosted interface, the partner-branded section, identity verification, issuance, settlement, reporting, and the approval workflow. The partner provides the brand, the licence, the staff, and the investor relationship.
+Juggervault provides the hosted interface, the partner-branded section, identity verification, issuance, settlement, reporting, and the approval workflow. The partner provides the brand, the license, the staff, and the investor relationship.
 
 Partner API access is optional. The address `/partner/bglafrica` remains the BGL Africa section.
 
@@ -51,7 +79,7 @@ This pathway is for a licensed Issuing House or Finance House that wants the Jug
 
 The issuer does not run a portal and does not have a partner section. Juggervault lists the deal on the public listing for the issuer, under a signed mandate. The operational mailbox is `issuinghouse@juggervault.finance`.
 
-| | |
+| Item | Position |
 | --- | --- |
 | Who controls the deal | Juggervault, for the issuer, under the mandate |
 | Who sets the approval route | Juggervault. The issuer approves and does not modify the route |
@@ -78,7 +106,7 @@ This pathway is for a smaller or first-time issuer, or an asset that has no lice
 
 ## Rules
 
-- The pathway is set per deal, not per company.
+- The access pathway is set per deal, not per company.
 - Pathway A investors are not shown in a Juggervault-hosted investor portal. They remain visible to Juggervault administration.
 - A Pathway B partner sees only that partner's deals.
 - A Pathway C deal is on the public listing.

@@ -59,6 +59,7 @@
         "openapi": "openapi.yaml",
         "pages": [
           "api-reference/introduction",
+          "GET /pathways",
           "GET /catalog",
           "GET /listings/{assetId}",
           "POST /investors/link",

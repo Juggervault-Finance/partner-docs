@@ -19,12 +19,54 @@ tags:
   - name: Purchase
   - name: Holdings
 paths:
+  /pathways:
+    get:
+      tags: [Catalog]
+      operationId: getPathways
+      summary: List licensed pathways
+      description: |
+        Issuing House and Finance House, and the offering programs each pathway may distribute.
+        This is not the access pathway (A, B, or C). Requires `catalog:read`.
+      responses:
+        "200":
+          description: Licensed pathways.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PathwayReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /catalog:
     get:
       tags: [Catalog]
       operationId: getCatalog
       summary: List offerings
-      description: Offerings that are listed for sale or have an active primary sale. Requires `catalog:read`.
+      description: |
+        Offerings that are listed for sale or have an active primary sale. Requires `catalog:read`.
+        Optional filters: `offeringProgram`, `licensedPathway`, and `licensedParty`.
+        Omit the filters to receive every listed offering, including both licensed pathways.
+      parameters:
+        - name: offeringProgram
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ipo, corporate_bond, project_financing]
+        - name: licensedPathway
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [issuing_house, finance_house]
+        - name: licensedParty
+          in: query
+          required: false
+          description: Case-insensitive match against the licensed party legal name. 255 characters or fewer.
+          schema:
+            type: string
+            maxLength: 255
       responses:
         "200":
           description: Catalog entries.
@@ -38,6 +80,25 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/CatalogItem"
+        "400":
+          description: The filter is not a valid licensed pathway or offering program.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                program:
+                  value:
+                    error: offeringProgram must be ipo, corporate_bond, or project_financing.
+                pathway:
+                  value:
+                    error: licensedPathway must be issuing_house or finance_house.
+                mismatch:
+                  value:
+                    error: This offering program is not available on the selected pathway.
+                party:
+                  value:
+                    error: licensedParty must be 255 characters or fewer.
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -538,115 +599,175 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OwnershipSegment"
+    PathwayDisclosure:
+      type: object
+      description: Licensed pathway and offering program recorded on the deal. Not the access pathway.
+      properties:
+        offeringProgram:
+          type: string
+          nullable: true
+          enum: [ipo, corporate_bond, project_financing]
+        offeringProgramLabel:
+          type: string
+          nullable: true
+        licensedPathway:
+          type: string
+          nullable: true
+          enum: [issuing_house, finance_house]
+        licensedPathwayLabel:
+          type: string
+          nullable: true
+        licensedPartyLegalName:
+          type: string
+          nullable: true
+        licensedPartyLicenseNote:
+          type: string
+          nullable: true
+        trusteeLegalName:
+          type: string
+          nullable: true
+        trusteeLicenseNote:
+          type: string
+          nullable: true
+    PathwayReference:
+      type: object
+      required: [pathways]
+      properties:
+        pathways:
+          type: array
+          items:
+            type: object
+            required: [licensedPathway, label, offeringPrograms]
+            properties:
+              licensedPathway:
+                type: string
+                enum: [issuing_house, finance_house]
+              label:
+                type: string
+              offeringPrograms:
+                type: array
+                items:
+                  type: object
+                  required: [offeringProgram, label]
+                  properties:
+                    offeringProgram:
+                      type: string
+                      enum: [ipo, corporate_bond, project_financing]
+                    label:
+                      type: string
     CatalogItem:
-      type: object
-      properties:
-        assetId:
-          type: string
-          format: uuid
-        name:
-          type: string
-        tokenName:
-          type: string
-        tokenSymbol:
-          type: string
-        isGloballyListed:
-          type: boolean
-        isPrimarySaleActive:
-          type: boolean
-        primarySalePrice:
-          $ref: "#/components/schemas/Decimal"
-        primarySaleCurrency:
-          type: string
-        primarySaleTotalAvailable:
-          $ref: "#/components/schemas/Decimal"
-        primarySaleSold:
-          $ref: "#/components/schemas/Decimal"
-        primarySaleRemaining:
-          $ref: "#/components/schemas/Decimal"
-        primarySaleStartDate:
-          type: string
-          nullable: true
-        primarySaleEndDate:
-          type: string
-          nullable: true
-        originatorRetainedUnits:
-          nullable: true
-          description: Units retained by the originator.
-          oneOf:
-            - $ref: "#/components/schemas/Decimal"
-        reservedAllocation:
-          nullable: true
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-              units:
-                $ref: "#/components/schemas/Decimal"
-              unlockRule:
-                type: string
-        issuingEntity:
-          type: string
-          nullable: true
-        jurisdiction:
-          type: string
-          nullable: true
-        ownership:
-          $ref: "#/components/schemas/Ownership"
+      allOf:
+        - $ref: "#/components/schemas/PathwayDisclosure"
+        - type: object
+          properties:
+            assetId:
+              type: string
+              format: uuid
+            name:
+              type: string
+            tokenName:
+              type: string
+            tokenSymbol:
+              type: string
+            isGloballyListed:
+              type: boolean
+            isPrimarySaleActive:
+              type: boolean
+            primarySalePrice:
+              $ref: "#/components/schemas/Decimal"
+            primarySaleCurrency:
+              type: string
+            primarySaleTotalAvailable:
+              $ref: "#/components/schemas/Decimal"
+            primarySaleSold:
+              $ref: "#/components/schemas/Decimal"
+            primarySaleRemaining:
+              $ref: "#/components/schemas/Decimal"
+            primarySaleStartDate:
+              type: string
+              nullable: true
+            primarySaleEndDate:
+              type: string
+              nullable: true
+            originatorRetainedUnits:
+              nullable: true
+              description: Units retained by the originator.
+              oneOf:
+                - $ref: "#/components/schemas/Decimal"
+            reservedAllocation:
+              nullable: true
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  units:
+                    $ref: "#/components/schemas/Decimal"
+                  unlockRule:
+                    type: string
+            issuingEntity:
+              type: string
+              nullable: true
+            jurisdiction:
+              type: string
+              nullable: true
+            ownership:
+              $ref: "#/components/schemas/Ownership"
     ListingAsset:
-      type: object
-      properties:
-        assetId:
-          type: string
-          format: uuid
-        name:
-          type: string
-        tokenName:
-          type: string
-        tokenSymbol:
-          type: string
-        primarySalePrice:
-          $ref: "#/components/schemas/Decimal"
-        primarySaleCurrency:
-          type: string
-        primarySaleTotalAvailable:
-          $ref: "#/components/schemas/Decimal"
-        primarySaleSold:
-          $ref: "#/components/schemas/Decimal"
-        primarySaleRemaining:
-          $ref: "#/components/schemas/Decimal"
-        originatorRetainedUnits:
-          nullable: true
-          oneOf:
-            - $ref: "#/components/schemas/Decimal"
-        reservedAllocation:
-          nullable: true
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-              units:
-                $ref: "#/components/schemas/Decimal"
-              unlockRule:
-                type: string
-        issuingEntity:
-          type: string
-          nullable: true
-        jurisdiction:
-          type: string
-          nullable: true
-        managerEntityLegalName:
-          type: string
-          nullable: true
-          description: Manager legal name recorded on the offering, when present.
-        managerLicenseNote:
-          type: string
-          nullable: true
-          description: Licence note recorded on the offering, when present.
+      allOf:
+        - $ref: "#/components/schemas/PathwayDisclosure"
+        - type: object
+          properties:
+            assetId:
+              type: string
+              format: uuid
+            name:
+              type: string
+            tokenName:
+              type: string
+            tokenSymbol:
+              type: string
+            primarySalePrice:
+              $ref: "#/components/schemas/Decimal"
+            primarySaleCurrency:
+              type: string
+            primarySaleTotalAvailable:
+              $ref: "#/components/schemas/Decimal"
+            primarySaleSold:
+              $ref: "#/components/schemas/Decimal"
+            primarySaleRemaining:
+              $ref: "#/components/schemas/Decimal"
+            originatorRetainedUnits:
+              nullable: true
+              oneOf:
+                - $ref: "#/components/schemas/Decimal"
+            reservedAllocation:
+              nullable: true
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  units:
+                    $ref: "#/components/schemas/Decimal"
+                  unlockRule:
+                    type: string
+            issuingEntity:
+              type: string
+              nullable: true
+            jurisdiction:
+              type: string
+              nullable: true
+            managerEntityLegalName:
+              type: string
+              nullable: true
+              description: Manager legal name recorded on the offering, when present.
+            managerLicenseNote:
+              type: string
+              nullable: true
+              description: Licence note recorded on the offering, when present.
     Listing:
       type: object
       properties:
@@ -829,29 +950,31 @@ components:
       required: [registration]
       properties:
         registration:
-          type: object
-          properties:
-            waitlistId:
-              type: string
-              format: uuid
-              nullable: true
-            status:
-              type: string
-              nullable: true
-              enum: [pending, approved, rejected, whitelisted]
-              description: "`whitelisted` means registration is complete and the investor may purchase."
-            assetId:
-              type: string
-              format: uuid
-            externalUserId:
-              type: string
-            userId:
-              type: string
-              format: uuid
-            reviewedAt:
-              type: string
-              format: date-time
-              nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PathwayDisclosure"
+            - type: object
+              properties:
+                waitlistId:
+                  type: string
+                  format: uuid
+                  nullable: true
+                status:
+                  type: string
+                  nullable: true
+                  enum: [pending, approved, rejected, whitelisted]
+                  description: "`whitelisted` means registration is complete and the investor may purchase."
+                assetId:
+                  type: string
+                  format: uuid
+                externalUserId:
+                  type: string
+                userId:
+                  type: string
+                  format: uuid
+                reviewedAt:
+                  type: string
+                  format: date-time
+                  nullable: true
     PurchaseIntentRequest:
       type: object
       required: [externalUserId, tokenAmount]
@@ -939,19 +1062,21 @@ components:
         intent:
           $ref: "#/components/schemas/Intent"
     Holding:
-      type: object
-      properties:
-        assetId:
-          type: string
-          format: uuid
-        name:
-          type: string
-        tokenSymbol:
-          type: string
-        units:
-          $ref: "#/components/schemas/Decimal"
-        ownership:
-          $ref: "#/components/schemas/Ownership"
+      allOf:
+        - $ref: "#/components/schemas/PathwayDisclosure"
+        - type: object
+          properties:
+            assetId:
+              type: string
+              format: uuid
+            name:
+              type: string
+            tokenSymbol:
+              type: string
+            units:
+              $ref: "#/components/schemas/Decimal"
+            ownership:
+              $ref: "#/components/schemas/Ownership"
     Holdings:
       type: object
       required: [externalUserId, userId, holdings]

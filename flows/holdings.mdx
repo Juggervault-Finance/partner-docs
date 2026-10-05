@@ -33,12 +33,14 @@ The investor must already be linked. A missing link returns `404`.
 }
 ```
 
+Each holding also includes the licensed pathway fields. Any of them may be `null`. See [Access pathways](/guides/access-pathways).
+
 `units` is that investor's holding on the portfolio record. A bank-settled Partner API purchase appears here. Dividends and buyback follow units issued to the platform account, not this portfolio credit alone. See [Protocol](/protocol/overview). `ownership.investorPct` is the investor's share of the project when the total is known, and `null` when it is not. `segments` is the same allocation shown in the portfolio: the investor, other investors by quantity only, units retained by the originator, reserved units, and units available for sale. Segment `id` is one of `you`, `other_investors`, `originator_retained`, `reserved`, `unsold_primary`, or `rest_of_project`.
 
 Other investors are not identified. The response does not include an account address. See [Accounts and custody](/guides/accounts-and-custody).
 
 ## Catalog and listing
 
-`GET /catalog` lists offerings that are listed for sale or have an active primary sale. Each item includes price, currency, units available, units sold, units remaining, and an `ownership` allocation for the offering. It does not include a personal holding. The key requires `catalog:read`.
+`GET /catalog` lists offerings that are listed for sale or have an active primary sale. Each item includes price, currency, units available, units sold, units remaining, an `ownership` allocation, and the licensed pathway fields. It does not include a personal holding. Optional filters are `licensedPathway`, `offeringProgram`, and `licensedParty`. The key requires `catalog:read`. `GET /pathways` uses that same scope and returns the allowed programs. See [Access pathways](/guides/access-pathways).
 
-`GET /listings/{assetId}` returns one offering: the asset summary, `ownership`, and `onChain` when a supply figure is available. `onChain` contains `totalSupply` and `isSaleActive`, or is `null`. An unknown offering returns `404` and `error` is `Listing not found.`
+`GET /listings/{assetId}` returns one offering. The licensed pathway fields are on `listing.asset`. `ownership` is beside `asset`. `onChain` contains `totalSupply` and `isSaleActive`, or is `null`. An unknown offering returns `404` and `error` is `Listing not found.`

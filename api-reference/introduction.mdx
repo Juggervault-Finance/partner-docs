@@ -12,7 +12,7 @@ The Partner API does not include routes for accounts, keys, cash movement, sessi
 - The server URL already includes `/api/partner/v1`. Paths on these pages are relative to that prefix.
 - Send JSON with `Content-Type: application/json` on `POST` requests.
 - Authenticate with `Authorization: Bearer` or `X-Api-Key`. See [Authentication](/guides/authentication).
-- Success bodies use one of these fields: `catalog`, `listing`, `investor`, `kyc`, `registration`, `intent`, or `holdings`. A purchase-intent read also includes `externalUserId`.
+- Success bodies use one of these fields: `pathways`, `catalog`, `listing`, `investor`, `kyc`, `registration`, `intent`, or `holdings`. A purchase-intent read also includes `externalUserId`.
 - Amounts may be JSON numbers or decimal strings. Parse both.
 - Times are ISO 8601 in UTC.
 

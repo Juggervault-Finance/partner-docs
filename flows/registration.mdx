@@ -65,6 +65,8 @@ If `platformTerms` is missing or false, the response is `400` and `error` is `Ag
 
 `status` is `pending` on creation. Later values are `approved`, `rejected`, or `whitelisted`. The value `whitelisted` means registration is complete and the investor may purchase.
 
+The registration object, including the status read, also includes the licensed pathway fields (`offeringProgram`, `licensedPathway`, and the related names). Any of them may be `null`. They are not access pathway A, B, or C. See [Access pathways](/guides/access-pathways).
+
 Approval of the request is not sufficient. The offering operator must complete registration before purchase.
 
 ## Read status
