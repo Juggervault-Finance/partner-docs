@@ -18,14 +18,21 @@
   "seo": {
     "metatags": {
       "canonical": "https://docs.juggervault.finance",
-      "description": "Partner API for broker distribution of Juggervault primary offerings."
+      "description": "Guide for issuing partners and broker partners distributing Juggervault primary offerings."
     }
   },
   "navigation": {
     "groups": [
       {
         "group": "Get started",
-        "pages": ["index", "guides/access-pathways", "quickstart", "going-live"]
+        "pages": [
+          "index",
+          "guides/issuing-partners",
+          "guides/broker-partners",
+          "guides/access-pathways",
+          "quickstart",
+          "going-live"
+        ]
       },
       {
         "group": "Guides",

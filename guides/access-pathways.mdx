@@ -39,7 +39,7 @@ These fields are on each catalog item, on `listing.asset`, on each registration 
 
 ## Pathway A: Customer-owned, API only
 
-The issuer runs its own portal and uses Juggervault through the Partner API. The deal is not listed on Juggervault.
+The issuer runs its own portal. The deal is not listed on Juggervault.
 
 | Item | Position |
 | --- | --- |
@@ -49,11 +49,11 @@ The issuer runs its own portal and uses Juggervault through the Partner API. The
 | Who approves | The customer's own approvers, in the customer's own system |
 | Billing | Per transaction and per active deal, invoiced offline |
 
-Juggervault provides Partner API access, identity verification for investors and companies, issuance, settlement, reporting, and the asset registry. Juggervault does not provide a hosted investor portal or a public listing for this pathway.
+Juggervault provides identity verification, issuance, settlement, reporting, and the asset registry. Juggervault does not provide a hosted investor portal or a public listing for this pathway.
 
-A purchase recorded with the routes on this site still follows [Investor account](/guides/investor-account), [Registration](/flows/registration), and [Purchase](/flows/purchase). There is no approval route in this API.
+The Partner API key for this pathway can monitor records. `GET` is allowed when the key has the scope. `POST` returns `403` and `error` is `This key can monitor records. It cannot change them.` Responses use the firm name in place of the platform name. When a consumer site is recorded for the broker, links that would have opened the Juggervault application open that site instead.
 
-This pathway is for a licensed Issuing House or Finance House that already has its own investor portal and its own compliance operation.
+This pathway is for a licensed Issuing House or Finance House that already has its own investor portal and its own compliance operation. See [Issuing partners](/guides/issuing-partners).
 
 ## Pathway B: Partner inside Juggervault
 
@@ -101,7 +101,7 @@ This pathway is for a smaller or first-time issuer, or an asset that has no lice
 | Who sets the approval route | Customer | Partner | Juggervault. The issuer approves |
 | Who approves | Customer's approvers | Partner staff or external link | Issuer, through the external link |
 | Where it is seen | Customer's portal only | Partner section only | Public listing |
-| Partner API | Yes | Optional | Not required |
+| Partner API | Read only | Optional, including writes | Not required |
 | Signed mandate | No | No | Yes |
 
 ## Rules

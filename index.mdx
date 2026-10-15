@@ -1,9 +1,11 @@
 ---
 title: "Introduction"
-description: "Programmatic access for brokers distributing Juggervault primary offerings."
+description: "What issuing partners and broker partners provide, and what Juggervault provides."
 ---
 
-Juggervault supports three access pathways, set per deal. This site documents the Partner API used by Pathway A, and available to Pathway B. Pathway C does not require it. See [Access pathways](/guides/access-pathways).
+An issuing partner is the licensed Issuing House or Finance House on a deal. A broker partner distributes that deal. Each page states what that party provides and what Juggervault provides. See [Issuing partners](/guides/issuing-partners) and [Broker partners](/guides/broker-partners).
+
+Juggervault supports three access pathways, set per deal. A Pathway A key can read the Partner API. It cannot change records. Write calls require a key that is not Pathway A. Pathway C does not require the Partner API. See [Access pathways](/guides/access-pathways).
 
 The Partner API enables a broker to link investors, submit identity data for platform verification, open registration, record a primary purchase, and read holdings.
 
@@ -38,7 +40,7 @@ The path is always `/api/partner/v1`. Use the API origin issued with the key whe
 
 <Steps>
   <Step title="Authenticate">
-    Send the broker API key on every request. See [Authentication](/guides/authentication).
+    Send the broker API key on every request. Write steps below require a key that is not Pathway A. See [Authentication](/guides/authentication).
   </Step>
   <Step title="Link the investor">
     `POST /investors/link` with your `externalUserId` and the investor's email.

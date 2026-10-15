@@ -27,6 +27,8 @@ Juggervault issues the full key once, when an administrator creates it under Adm
 
 A key authorizes only the routes included in its scopes. A missing scope returns `403`.
 
+A Pathway A key may call `GET` routes included in its scopes. Any `POST` returns `403` and `error` is `This key can monitor records. It cannot change them.` Linking, identity import, registration, and purchase require a key that is not Pathway A. See [Broker partners](/guides/broker-partners).
+
 | Scope | Access |
 | --- | --- |
 | `catalog:read` | Licensed pathways, the catalog, and a single listing |

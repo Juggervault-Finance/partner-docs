@@ -1,0 +1,42 @@
+---
+title: "Issuing partners"
+description: "What a licensed Issuing House or Finance House provides, and what Juggervault provides."
+---
+
+An issuing partner is a licensed Issuing House or a licensed Finance House. Juggervault is the platform. The issuing partner is the licensed intermediary. Juggervault does not replace that licence.
+
+The licensed pathway is set on the company. The access pathway is set on each deal. See [Access pathways](/guides/access-pathways).
+
+## What the issuing partner provides
+
+The person who registers the company must already have approved identity verification.
+
+The company provides its legal details, selects at least one licensed pathway, and submits the documents for that pathway before company verification can be approved.
+
+| Licensed pathway | Documents |
+| --- | --- |
+| Issuing House | SEC / Issuing House licence. Certificate of incorporation. Board resolution authorizing use of Juggervault for offer arrangement and investor registration. |
+| Finance House | Finance House licence. Certificate of incorporation. Board resolution or appointment to manage issuing vehicles and use the platform for project financing. Trustee engagement evidence: a letter of engagement, appointment, or equivalent for a licensed security trustee. |
+| Both | SEC / house licence. Certificate of incorporation. Board resolution or mandate. Trustee engagement evidence. |
+
+An Issuing House may open an IPO or a corporate bond. Those programs do not place an issuing vehicle or a security trustee on the platform. The Issuing House keeps those particulars. A Finance House may open project financing. That program requires an issuing vehicle and a security trustee on the platform.
+
+The company names the staff who may operate an offer.
+
+| Access pathway | The issuing partner also provides |
+| --- | --- |
+| Pathway A | Its own investor portal and its own compliance operation. A consumer site address, when links in API responses should open that site. |
+| Pathway B | Its brand, its staff, and its investor relationship. Partner staff, or an external approver by email, approve the deal. |
+| Pathway C | The asset, a signed mandate, and approval through the external link. The issuer does not set the approval route. |
+
+## What Juggervault provides
+
+| Access pathway | Juggervault provides |
+| --- | --- |
+| Pathway A | Partner API read access, identity verification, issuance, settlement, reporting, and the asset registry. No hosted investor portal and no public listing. |
+| Pathway B | The hosted application, a partner-branded section, identity verification, issuance, settlement, reporting, and the approval workflow. Example: `https://tokenization.juggervault.finance/partner/bglafrica`. |
+| Pathway C | The public listing, investor onboarding, settlement, and reporting, under the operational mailbox `issuinghouse@juggervault.finance`. |
+
+Company verification is reviewed on Juggervault before the company can prepare an offering. Billing for Pathway A and Pathway B is per transaction and per active deal, invoiced offline. Pathway C uses the standard Juggervault fees. See [Fees](/guides/fees).
+
+A Pathway A API key can read records. It cannot create or change them. Distribution calls are described in [Broker partners](/guides/broker-partners).

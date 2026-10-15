@@ -7,7 +7,7 @@ Complete these checks before investors are linked on a production key.
 
 <AccordionGroup>
   <Accordion title="Key handling">
-    Store the key in a secrets manager. It is displayed once at creation. If the key is disclosed, rotate it in Admin. Send it only as `Authorization: Bearer` or `X-Api-Key`.
+    Store the key in a secrets manager. It is displayed once at creation. If the key is disclosed, rotate it in Admin. Send it only as `Authorization: Bearer` or `X-Api-Key`. Confirm the key is not a Pathway A key before calling a write route. A Pathway A key can read records only.
   </Accordion>
   <Accordion title="Scopes">
     Grant only the scopes the integration calls. Catalog reads, investor linking, identity import, registration, purchase, and holdings are separate scopes. See [Authentication](/guides/authentication).

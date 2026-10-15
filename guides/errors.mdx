@@ -11,10 +11,22 @@ Failed requests return JSON. The message for the client is `error`. Some failure
 | --- | --- |
 | `400` | The body is invalid, or a business rule rejected the input. |
 | `401` | The API key is missing or invalid. |
-| `403` | Partner API is not enabled for the broker, the key lacks a scope, or the record is not associated with this broker. |
+| `403` | Partner API is not enabled for the broker, the key lacks a scope, the record is not associated with this broker, or a Pathway A key attempted a change. |
 | `404` | The listing, investor link, or purchase intent does not exist. |
 | `409` | The identity, link, or verification state conflicts with an existing record. |
 | `500` | The request could not be completed. Repeat the request later. |
+
+## Pathway A key
+
+A Pathway A key can read records. A `POST` returns:
+
+```json
+{
+  "error": "This key can monitor records. It cannot change them."
+}
+```
+
+The status is `403`. Use a key that is not Pathway A for linking, identity import, registration, and purchase.
 
 ## Validation
 

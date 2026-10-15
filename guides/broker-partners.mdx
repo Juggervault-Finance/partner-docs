@@ -1,0 +1,48 @@
+---
+title: "Broker partners"
+description: "What a distributing broker provides, and what Juggervault provides."
+---
+
+A broker partner distributes a primary offering. The broker is not the issuing partner. The issuing partner controls the deal. The broker links investors and records a bank-transfer purchase. See [Issuing partners](/guides/issuing-partners).
+
+The routes on this site are the complete Partner API. They do not open an account, accept an address, or return a key.
+
+## What the broker provides
+
+Juggervault administration records the firm name and contact email and issues the API key. The broker must be active, and Partner API must be enabled, before any call succeeds.
+
+| Item | Required from the broker |
+| --- | --- |
+| API key | Store it in a secrets manager. It is shown once. Send it as `Authorization: Bearer` or `X-Api-Key`. |
+| Scopes | Use only the scopes the integration calls. See [Authentication](/guides/authentication). |
+| Engagement | A Pathway A key can read records only. Linking, identity import, registration, and purchase require a key that is not Pathway A. |
+| Investor | A stable `externalUserId` and the investor's email. |
+| Identity data | Optional. Import does not approve the investor. The investor still completes verification, eligibility, and an accredited self-certification in the application. |
+| Account | The investor sets a password from Forgot password if none exists, then signs in, before registration. |
+| Registration | `consents.platformTerms` set to `true`, and the other acknowledgements the investor has accepted. |
+| Payment | The issuer's payment instructions, obtained outside the API. After the investor pays, the bank reference. |
+| Webhooks | An HTTPS URL and a signing secret, if the broker wants notices. Verify `X-Juggervault-Signature` on the raw body. |
+
+The order of calls is in [Introduction](/). Each refusal is in [Errors](/guides/errors).
+
+## What Juggervault provides
+
+| Item | Provided by Juggervault |
+| --- | --- |
+| Key and referral link | The API key, and `registrationUrl` on a successful link. |
+| Catalog | Offerings open for distribution, the licensed pathway, and the offering program. |
+| Investor link | A profile for `externalUserId`. Linking does not open the platform account. |
+| Identity decision | Juggervault approves or rejects verification. A partner attestation is not accepted as approval. |
+| Account | One platform account per investor, opened when the investor signs in after approval. Full platform custody. See [Accounts and custody](/guides/accounts-and-custody). |
+| Registration | A registration request. Purchase is available only after the offering operator completes registration. The status is then `whitelisted`. |
+| Purchase | A bank-transfer intent. `paymentAmount` is the amount to pay. The response does not include a bank account. Settlement is completed by the offering operator. |
+| Holdings | Units and share of the project. A bank-settled purchase is a portfolio record. Dividends and buyback follow units issued to the platform account. |
+| Notices | `kyc.approved`, `kyc.rejected`, `registration.approved`, `purchase.settled`, and `holding.updated`. |
+| Fee | 1% on top of the share consideration. The broker share on a Partner API purchase is 0.7% of that consideration, invoiced outside the platform. See [Fees](/guides/fees). |
+
+## What the broker does not receive
+
+- An account address or a key.
+- The issuer's bank account in the purchase response.
+- A route to set the access pathway or to approve the deal.
+- A successful write on a Pathway A key. The status is `403` and `error` is `This key can monitor records. It cannot change them.`
