@@ -45,15 +45,14 @@ An investor may link an external account in the application. That option is sepa
 
 ## Where a purchase is recorded
 
-Partner API purchase routes are issuer-directed bank transfer. See [Purchase](/flows/purchase).
+Primary purchase is from the investor's Juggervault account balance in the application. Partner API bank-transfer purchase intents are retired. See [Purchase](/flows/purchase).
 
 | Path | Who starts it | What the investor pays | Where units are recorded |
 | --- | --- | --- | --- |
-| Partner API purchase intent | The partner integration | Bank transfer of the share price plus the execution fee, under the issuer's payment instructions | Credited to the investor's portfolio record when the offering operator settles the intent |
 | Account balance | The investor, after sign-in, in the application | Cash already held in the Juggervault account | Issued to the platform account at purchase |
 
-Account-balance purchase is not a Partner API request. Dividends and buyback, where an offering provides them, apply to units issued to the platform account. A bank-settled portfolio credit is a separate record. Read either result with `GET /investors/{externalUserId}/holdings`. That response contains units and share of the project. It does not contain an account address. How issuance treats that credit is described in [Protocol](/protocol/overview).
+Account-balance purchase is not a Partner API request. Dividends and buyback, where an offering provides them, apply to units issued to the platform account. Read holdings with `GET /investors/{externalUserId}/holdings`. That response contains units and share of the project. It does not contain an account address. How issuance treats that credit is described in [Protocol](/protocol/overview).
 
 ## Scope of this API
 
-These pages are the complete Partner API: catalog, investor link, identity submission and status, registration, bank-transfer purchase intents, holdings, and outbound webhooks. Session, account, cash, and administration routes are outside the Partner API. A broker key is not valid for those routes.
+These pages are the complete Partner API: catalog, investor link, identity submission and status, registration, holdings, and outbound webhooks. Session, account, cash, and administration routes are outside the Partner API. A broker key is not valid for those routes.

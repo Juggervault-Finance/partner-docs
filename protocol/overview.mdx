@@ -23,10 +23,10 @@ The Partner API does not call the issuance contracts, and it does not accept or 
     The offer operator completes registration for that investor on that offering. Until this step is done, the investor cannot purchase.
   </Step>
   <Step title="Purchase">
-    An account-balance purchase issues units to the platform account. The investor pays the share price plus the execution fee. See [Fees](/guides/fees). A Partner API bank transfer is recorded on the portfolio record and does not issue units. See [Purchase](/flows/purchase).
+    An account-balance purchase issues units to the platform account. The investor pays the share price plus the execution fee. See [Fees](/guides/fees). Partner API bank-transfer purchase intents are retired. See [Purchase](/flows/purchase).
   </Step>
   <Step title="Dividend and buyback">
-    Dividends and buyback, where the offering provides them, follow units issued to the platform account. They do not follow a bank-settled portfolio credit.
+    Dividends and buyback, where the offering provides them, follow units issued to the platform account.
   </Step>
 </Steps>
 
