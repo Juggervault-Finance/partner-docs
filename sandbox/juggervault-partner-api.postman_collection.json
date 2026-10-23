@@ -1,0 +1,353 @@
+{
+  "info": {
+    "name": "Juggervault Partner API (Sandbox)",
+    "description": "Staging sandbox for Broker distribution and House issuance. Set collection variables before running. Keys are issued by a Juggervault administrator; partners do not self-provision keys.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.juggervault.finance/api/partner/v1"
+    },
+    {
+      "key": "brokerApiKey",
+      "value": "jvpk_REPLACE_BROKER"
+    },
+    {
+      "key": "houseApiKey",
+      "value": "jvpk_REPLACE_HOUSE"
+    },
+    {
+      "key": "externalUserId",
+      "value": "sandbox-investor-001"
+    },
+    {
+      "key": "investorEmail",
+      "value": "sandbox.investor@example.com"
+    },
+    {
+      "key": "assetId",
+      "value": ""
+    },
+    {
+      "key": "offeringId",
+      "value": ""
+    },
+    {
+      "key": "intentId",
+      "value": ""
+    },
+    {
+      "key": "investorId",
+      "value": ""
+    },
+    {
+      "key": "approverUserId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Broker",
+      "item": [
+        {
+          "name": "Link investor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{brokerApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserId\": \"{{externalUserId}}\",\n  \"email\": \"{{investorEmail}}\",\n  \"firstName\": \"Sandbox\",\n  \"lastName\": \"Investor\"\n}"
+            },
+            "url": "{{baseUrl}}/investors/link"
+          }
+        },
+        {
+          "name": "Import identity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{brokerApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateOfBirth\": \"1990-01-15\",\n  \"nationality\": \"Nigerian\",\n  \"primaryIdType\": \"nin\",\n  \"nin\": \"12345678901\",\n  \"tin\": \"12345678-0001\",\n  \"address\": \"1 Broad Street\",\n  \"city\": \"Lagos\",\n  \"state\": \"Lagos\",\n  \"country\": \"NG\"\n}"
+            },
+            "url": "{{baseUrl}}/investors/{{externalUserId}}/kyc-import"
+          }
+        },
+        {
+          "name": "Update eligibility profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{brokerApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accreditedStatus\": true,\n  \"employmentStatus\": \"employed\",\n  \"accreditationBasis\": \"income\",\n  \"annualIncomeNgn\": 50000000,\n  \"investmentGoal\": \"Long-term project finance exposure\"\n}"
+            },
+            "url": "{{baseUrl}}/investors/{{externalUserId}}/profile"
+          }
+        },
+        {
+          "name": "Create registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{brokerApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserId\": \"{{externalUserId}}\",\n  \"consents\": {\n    \"platformTerms\": true,\n    \"riskDisclosure\": true,\n    \"offeringDocuments\": true,\n    \"transferRestrictions\": true,\n    \"accreditedDeclaration\": true\n  }\n}"
+            },
+            "url": "{{baseUrl}}/assets/{{assetId}}/registration"
+          }
+        },
+        {
+          "name": "Create USDC purchase intent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try {",
+                  "  const body = pm.response.json();",
+                  "  if (body.intent && body.intent.id) {",
+                  "    pm.collectionVariables.set('intentId', body.intent.id);",
+                  "  }",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{brokerApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserId\": \"{{externalUserId}}\",\n  \"tokenAmount\": 10\n}"
+            },
+            "url": "{{baseUrl}}/assets/{{assetId}}/purchase-intents"
+          }
+        },
+        {
+          "name": "List investor intents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{brokerApiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/investors/{{externalUserId}}/intents"
+          }
+        },
+        {
+          "name": "Get holdings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{brokerApiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/investors/{{externalUserId}}/holdings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "House",
+      "item": [
+        {
+          "name": "Get company",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{houseApiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/house/company"
+          }
+        },
+        {
+          "name": "Create offering",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try {",
+                  "  const body = pm.response.json();",
+                  "  if (body.offering && body.offering.offeringId) {",
+                  "    pm.collectionVariables.set('offeringId', body.offering.offeringId);",
+                  "    pm.collectionVariables.set('assetId', body.offering.offeringId);",
+                  "  }",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{houseApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sandbox Offering\",\n  \"originatorUserId\": \"{{approverUserId}}\",\n  \"location\": \"Lagos\",\n  \"jurisdiction\": \"Nigeria\",\n  \"tokenName\": \"Sandbox Units\",\n  \"tokenSymbol\": \"SBOX\",\n  \"tokenSupply\": 1000,\n  \"offeringProgram\": \"project_financing\",\n  \"licensedPathway\": \"finance_house\"\n}"
+            },
+            "url": "{{baseUrl}}/house/offerings"
+          }
+        },
+        {
+          "name": "Submit offering",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{houseApiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/house/offerings/{{offeringId}}/submit"
+          }
+        },
+        {
+          "name": "Approve offering step",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{houseApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approverUserId\": \"{{approverUserId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/house/offerings/{{offeringId}}/approve"
+          }
+        },
+        {
+          "name": "Open sale",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{houseApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"primarySalePrice\": 10,\n  \"primarySaleCurrency\": \"USD\",\n  \"primarySaleTotalAvailable\": 500,\n  \"primarySaleMinPurchase\": 1,\n  \"primarySaleMaxPurchase\": 100,\n  \"acceptingWaitlistRequests\": true\n}"
+            },
+            "url": "{{baseUrl}}/house/offerings/{{offeringId}}/open-sale"
+          }
+        },
+        {
+          "name": "List registrations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{houseApiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/house/offerings/{{offeringId}}/registrations"
+          }
+        },
+        {
+          "name": "Approve registration (whitelisted)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{houseApiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/house/offerings/{{offeringId}}/registrations/{{investorId}}/approve"
+          }
+        },
+        {
+          "name": "Investor report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{houseApiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/house/offerings/{{offeringId}}/report"
+          }
+        }
+      ]
+    }
+  ]
+}

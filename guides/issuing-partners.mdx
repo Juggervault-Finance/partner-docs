@@ -40,3 +40,37 @@ The company names the staff who may operate an offer.
 Company verification is reviewed on Juggervault before the company can prepare an offering. Billing for Pathway A and Pathway B is per transaction and per active deal, invoiced offline. Pathway C uses the standard Juggervault fees. See [Fees](/guides/fees).
 
 A Pathway A API key can read records. It cannot create or change them. Distribution calls are described in [Broker partners](/guides/broker-partners).
+
+## House Partner API
+
+Issuing Houses and Finance Houses that operate deal lifecycle from their own systems use the **House Partner API** under `/api/partner/v1/house/*`. House keys are separate from broker keys.
+
+### Provisioning
+
+1. An administrator creates or selects the company on Juggervault.
+2. An administrator creates a house partner record bound to that `companyId`.
+3. An administrator enables Partner API, sets the webhook URL and signing secret, and issues a House key with selected house scopes.
+4. The plaintext key is shown once. The key is already bound to that company. `POST /house/company` updates that company only. It does not create a new company.
+
+### Deal lifecycle (House key)
+
+| Step | Method and path | Scope |
+| --- | --- | --- |
+| Read or update company | `GET` / `POST /house/company` | `house:company:write` or `house:offerings:read` (read) |
+| Submit KYB documents | `POST /house/company/kyb` | `house:company:write` |
+| Create or update offering | `POST` / `PUT /house/offerings` | `house:offerings:write` |
+| Submit for approval | `POST /house/offerings/{offeringId}/submit` | `house:offerings:write` |
+| Advance company approval step | `POST /house/offerings/{offeringId}/approve` | `house:approvals:write` |
+| Open primary sale | `POST /house/offerings/{offeringId}/open-sale` | `house:sale:write` |
+| List registrations | `GET /house/offerings/{offeringId}/registrations` | `house:registrations:read` |
+| Admit investor (`whitelisted`) | `POST .../registrations/{investorId}/approve` | `house:registrations:write` |
+| Settle bank intent | `POST .../intents/{intentId}/settle` | `house:settlement:write` |
+| Investor report | `GET /house/offerings/{offeringId}/report` | `house:reports:read` |
+
+`open-sale` saves primary-sale terms through the same services as the hosted application, opens registration acceptance when package approval is complete, and returns prepared listing calldata when on-chain listing is still required. It does not bypass factory-admin signatures.
+
+Registration admit performs approve then complete registration so status becomes `whitelisted` and purchase can proceed.
+
+Platform-admin approval steps remain Admin-only. They are not exposed on House routes.
+
+Broker distribution endpoints under `/investors/*`, `/catalog`, and related paths remain broker-audience only. A House key receives `403` with `This key cannot access broker routes.` A broker key on `/house/*` receives `403` with `This key cannot access house routes.`

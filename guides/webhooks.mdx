@@ -3,17 +3,31 @@ title: "Webhooks"
 description: "Signed notices when identity, registration, purchase, or holdings change."
 ---
 
-Juggervault posts JSON to the webhook URL stored on the broker. An administrator sets that URL and the signing secret under Admin, Partner API. Delivery runs only when Partner API is enabled and both the URL and the secret are set.
+Juggervault posts JSON to the webhook URL stored on the broker or the house partner. An administrator sets that URL and the signing secret under Admin. Delivery runs only when Partner API is enabled and both the URL and the secret are set.
 
-## Events
+## Broker events
 
 | `type` | When it is sent |
 | --- | --- |
 | `kyc.approved` | Identity verification is approved |
 | `kyc.rejected` | Identity verification is rejected |
-| `registration.approved` | The offering operator approves the registration request. The operator must also complete registration before purchase. |
+| `registration.approved` | The offering operator approves the registration request. Purchase still requires complete registration (`whitelisted`). |
+| `registration.completed` | Registration is complete (`whitelisted`). The investor is cleared to buy. |
 | `purchase.settled` | A primary purchase settles |
 | `holding.updated` | Sent with `purchase.settled` for that sale, with the unit change |
+
+Listen for `registration.completed` when the white-label purchase path should unlock. `registration.approved` alone is not sufficient.
+
+## House events
+
+House webhooks use the same envelope and signature headers. Every `data` object includes `companyId`, plus `offeringId` / `assetId` when the event is offering-scoped.
+
+| `type` | When it is sent |
+| --- | --- |
+| `offering.approved` | Package approval completes (company route or Admin final step that unlocks publish) |
+| `registration.requested` | An investor successfully joins the waitlist for that company’s offering |
+| `intent.created` | A purchase intent is created for that company’s offering |
+| `sale.opened` | Primary-sale acceptance is persisted (open-sale or list-for-sale) |
 
 ## Envelope
 
@@ -42,6 +56,7 @@ Every `data` object includes `userId`. `externalUserId` is the partner identifie
 | `kyc.approved` | `kycStatus` (`approved`) |
 | `kyc.rejected` | `kycStatus` (`rejected`), `rejectionReason` (string or `null`) |
 | `registration.approved` | `assetId`, `assetName`, plus the licensed pathway fields below |
+| `registration.completed` | `assetId`, `assetName`, plus the licensed pathway fields below |
 | `purchase.settled` | `saleId`, `assetId`, `tokenAmount`, `purchasePrice`, `currency`, and `intentId` when the purchase came from a Partner API intent, plus the licensed pathway fields below |
 | `holding.updated` | `saleId`, `assetId`, `deltaUnits`, plus the licensed pathway fields below |
 

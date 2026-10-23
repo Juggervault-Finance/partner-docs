@@ -3,7 +3,7 @@ title: "Authentication"
 description: "API keys, request headers, and scopes for the Partner API."
 ---
 
-Every Partner API request requires a broker API key. The broker must be active, and Partner API must be enabled on that broker.
+Every Partner API request requires a partner API key. Keys are either **broker** or **house** audience. The same `jvpk_` format is used for both. Broker keys access distribution routes. House keys access `/house/*` routes only. The firm must be active, and Partner API must be enabled on that broker or house partner.
 
 ## Send the key
 
@@ -21,9 +21,16 @@ X-Api-Key: jvpk_<prefix>_<secret>
 
 The key format is `jvpk_`, an 8-character prefix, an underscore, then the secret. A value that does not match that form is rejected as invalid.
 
-Juggervault issues the full key once, when an administrator creates it under Admin, Brokers, Partner API. Store it as a secret. The prefix may be displayed later. The secret cannot be retrieved again.
+Juggervault issues the full key once. Broker keys are created under Admin, Brokers, Partner API. House keys are created under Admin, House partners, for a company already on the platform. Store the key as a secret. The prefix may be displayed later. The secret cannot be retrieved again.
 
-## Scopes
+## Audience
+
+| Audience | Routes | Isolation |
+| --- | --- | --- |
+| Broker | `/pathways`, `/catalog`, `/investors/*`, `/assets/*`, `/purchase-intents/*` | House key → `403` `This key cannot access broker routes.` |
+| House | `/house/*` | Broker key → `403` `This key cannot access house routes.` |
+
+## Broker scopes
 
 A key authorizes only the routes included in its scopes. A missing scope returns `403`.
 
@@ -32,11 +39,11 @@ A Pathway A key may call `GET` routes included in its scopes. Any `POST` returns
 | Scope | Access |
 | --- | --- |
 | `catalog:read` | Licensed pathways, the catalog, and a single listing |
-| `investors:write` | Link an investor, read an investor, read identity status |
+| `investors:write` | Link an investor, read an investor, update eligibility profile, read identity status |
 | `kyc:write` | Import identity data, read identity status |
 | `registration:write` | Create a registration request |
 | `registration:read` | Read registration status |
-| `purchase:write` | Create a purchase intent, submit payment proof, read an intent |
+| `purchase:write` | Create a USDC purchase intent, submit payment proof, read or list intents |
 | `holdings:read` | Read an investor and that investor's holdings |
 
 Some reads accept either of two scopes:
@@ -46,6 +53,22 @@ Some reads accept either of two scopes:
 | `GET /investors/{externalUserId}` | `investors:write` or `holdings:read` |
 | `GET /investors/{externalUserId}/kyc` | `kyc:write` or `investors:write` |
 
+## House scopes
+
+| Scope | Access |
+| --- | --- |
+| `house:company:write` | Read or update the bound company, submit KYB documents |
+| `house:offerings:write` | Create, update, and submit offerings |
+| `house:offerings:read` | List and read offerings; also accepted for `GET /house/company` |
+| `house:approvals:write` | Advance a company-controlled approval step |
+| `house:sale:write` | Open primary sale (save terms; return listing calldata when required) |
+| `house:registrations:read` | List registration requests |
+| `house:registrations:write` | Approve and complete registration (`whitelisted`) |
+| `house:settlement:write` | Settle a bank purchase intent for an owned offering |
+| `house:reports:read` | Investor report for an owned offering |
+
+See [Issuing partners](/guides/issuing-partners).
+
 ## Failures
 
 | Status | `error` |
@@ -53,4 +76,7 @@ Some reads accept either of two scopes:
 | `401` | `Partner API key is required.` |
 | `401` | `Invalid partner API key.` |
 | `403` | `Partner API access is not enabled for this broker.` |
+| `403` | `Partner API access is not enabled for this house.` |
+| `403` | `This key cannot access broker routes.` |
+| `403` | `This key cannot access house routes.` |
 | `403` | `Missing required partner scope: <scope>.` |

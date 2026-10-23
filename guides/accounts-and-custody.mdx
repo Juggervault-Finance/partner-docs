@@ -45,14 +45,15 @@ An investor may link an external account in the application. That option is sepa
 
 ## Where a purchase is recorded
 
-Primary purchase is from the investor's Juggervault account balance in the application. Partner API bank-transfer purchase intents are retired. See [Purchase](/flows/purchase).
-
 | Path | Who starts it | What the investor pays | Where units are recorded |
 | --- | --- | --- | --- |
 | Account balance | The investor, after sign-in, in the application | Cash already held in the Juggervault account | Issued to the platform account at purchase |
+| Partner USDC intent | The broker, via Partner API | USDC to the platform settlement receive address returned on the intent | Issued after settlement (not automatic on create) |
 
-Account-balance purchase is not a Partner API request. Dividends and buyback, where an offering provides them, apply to units issued to the platform account. Read holdings with `GET /investors/{externalUserId}/holdings`. That response contains units and share of the project. It does not contain an account address. How issuance treats that credit is described in [Protocol](/protocol/overview).
+Partner `POST /assets/{assetId}/purchase-intents` returns a **platform** USDC receive address for white-label payment screens. It does not return an investor custody key or smart-wallet private material. Issuer-directed bank allocation remains retired. See [Purchase](/flows/purchase).
+
+Dividends and buyback, where an offering provides them, apply to units issued to the platform account. Read holdings with `GET /investors/{externalUserId}/holdings`. That response contains units and share of the project. How issuance treats that credit is described in [Protocol](/protocol/overview).
 
 ## Scope of this API
 
-These pages are the complete Partner API: catalog, investor link, identity submission and status, registration, holdings, and outbound webhooks. Session, account, cash, and administration routes are outside the Partner API. A broker key is not valid for those routes.
+These pages are the complete Partner API: catalog, investor link, identity and eligibility, registration, Partner USDC purchase intents, holdings, and outbound webhooks. Session and administration routes are outside the Partner API. A broker key is not valid for those routes.

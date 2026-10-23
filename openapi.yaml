@@ -3,7 +3,8 @@ info:
   title: Juggervault Partner API
   version: "1.0.0"
   description: |
-    Broker distribution API for Juggervault primary offerings.
+    Partner API for Juggervault primary offerings.
+    Broker keys access distribution routes. House keys access `/house/*` routes only.
     The path prefix `/api/partner/v1` is included in the server URL.
 servers:
   - url: https://api.juggervault.finance/api/partner/v1
@@ -18,6 +19,10 @@ tags:
   - name: Registration
   - name: Purchase
   - name: Holdings
+  - name: House Company
+  - name: House Offerings
+  - name: House Registrations
+  - name: House Settlement
 paths:
   /pathways:
     get:
@@ -276,6 +281,69 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /investors/{externalUserId}/profile:
+    put:
+      tags: [Investors]
+      operationId: updateInvestorProfile
+      summary: Update investor eligibility profile
+      description: |
+        Completes the investor eligibility profile required before registration.
+        Maps `accreditedStatus` to the platform accredited-investor declaration.
+        When accredited, requires the same detail fields as the hosted application.
+        Optional `dateOfBirth` and `nationality` update the KYC record.
+        Requires `investors:write`.
+      parameters:
+        - $ref: "#/components/parameters/ExternalUserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accreditedStatus]
+              properties:
+                accreditedStatus:
+                  type: boolean
+                employmentStatus:
+                  type: string
+                  enum: [employed, self_employed, unemployed, retired, student]
+                accreditationBasis:
+                  type: string
+                  enum: [income, net_worth, professional]
+                annualIncomeNgn:
+                  type: number
+                netWorthNgn:
+                  type: number
+                professionalAccreditationNote:
+                  type: string
+                investmentGoal:
+                  type: string
+                  maxLength: 255
+                dateOfBirth:
+                  type: string
+                  format: date
+                nationality:
+                  type: string
+      responses:
+        "200":
+          description: Eligibility profile saved.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [profile]
+                properties:
+                  profile:
+                    type: object
+                    additionalProperties: true
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "404":
+          $ref: "#/components/responses/InvestorNotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /assets/{assetId}/registration:
     post:
       tags: [Registration]
@@ -343,10 +411,12 @@ paths:
     post:
       tags: [Purchase]
       operationId: createPurchaseIntent
-      summary: Create a purchase intent
+      summary: Create a USDC purchase intent
       description: |
-        Opens a bank-transfer primary purchase. Does not debit account cash.
+        Creates an on-chain USDC Partner purchase intent after registration is complete.
+        Returns `paymentInstructions` with the platform USDC receive address and exact amount.
         Requires `purchase:write`. Stamps `purchaseChannel` as `partner_api`.
+        Issuer-directed bank allocation is not used on this path.
       parameters:
         - $ref: "#/components/parameters/AssetId"
       requestBody:
@@ -357,7 +427,7 @@ paths:
               $ref: "#/components/schemas/PurchaseIntentRequest"
       responses:
         "201":
-          description: Intent created with status `pending_payment`.
+          description: Intent created with status `pending_payment` and payment instructions.
           content:
             application/json:
               schema:
@@ -374,12 +444,21 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "503":
+          description: Platform USDC settlement address is not configured.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /purchase-intents/{intentId}/payment:
     post:
       tags: [Purchase]
       operationId: submitPurchasePayment
-      summary: Submit a bank reference
-      description: Records the investor's bank payment reference. Requires `purchase:write`. Does not settle the purchase.
+      summary: Submit payment proof
+      description: |
+        Records a USDC transfer hash or payment reference on an on-chain Partner intent.
+        Requires `purchase:write`. Does not settle the purchase.
+        Bank-allocation intents remain retired (`410`).
       parameters:
         - $ref: "#/components/parameters/IntentId"
       requestBody:
@@ -420,17 +499,53 @@ paths:
                 error: Purchase intent not found.
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /investors/{externalUserId}/intents:
+    get:
+      tags: [Purchase]
+      operationId: listInvestorIntents
+      summary: List purchase intents for an investor
+      description: |
+        Returns Partner USDC purchase intents created by this broker for the linked investor.
+        Requires `purchase:write`.
+      parameters:
+        - $ref: "#/components/parameters/ExternalUserId"
+      responses:
+        "200":
+          description: Intent list with payment instructions where applicable.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [externalUserId, userId, intents]
+                properties:
+                  externalUserId:
+                    type: string
+                  userId:
+                    type: string
+                    format: uuid
+                  intents:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/IntentEnvelope"
+        "404":
+          $ref: "#/components/responses/InvestorNotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /purchase-intents/{intentId}:
     get:
       tags: [Purchase]
       operationId: getPurchaseIntent
       summary: Get a purchase intent
-      description: Requires `purchase:write`. The intent must belong to an investor linked to this broker.
+      description: |
+        Requires `purchase:write`. The intent must belong to an investor linked to this broker.
+        Includes `paymentInstructions` for on-chain USDC intents.
       parameters:
         - $ref: "#/components/parameters/IntentId"
       responses:
         "200":
-          description: Intent and the partner external user id.
+          description: Intent, external user id, and payment instructions when applicable.
           content:
             application/json:
               schema:
@@ -476,17 +591,415 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+  /house/company:
+    get:
+      tags: [House Company]
+      operationId: houseGetCompany
+      summary: Get bound company
+      description: Returns the company bound to this House key. Requires `house:company:write` or `house:offerings:read`.
+      responses:
+        "200":
+          description: Bound company.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseCompanyEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [House Company]
+      operationId: houseUpdateCompany
+      summary: Update bound company
+      description: Updates legal and pathway fields on the company bound to this House key. Requires `house:company:write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                legalName:
+                  type: string
+                registrationNumber:
+                  type: string
+                jurisdiction:
+                  type: string
+                managerEntityLegalName:
+                  type: string
+                  nullable: true
+                managerLicenseNote:
+                  type: string
+                  nullable: true
+                licensedPathways:
+                  type: array
+                  items:
+                    type: string
+                    enum: [issuing_house, finance_house]
+      responses:
+        "200":
+          description: Updated company.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseCompanyEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/company/kyb:
+    post:
+      tags: [House Company]
+      operationId: houseSubmitKyb
+      summary: Submit KYB documents
+      description: Submit or replace pathway documents for the bound company. Requires `house:company:write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [documents]
+              properties:
+                notes:
+                  type: string
+                documents:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [type, url]
+                    properties:
+                      type:
+                        type: string
+                      name:
+                        type: string
+                      url:
+                        type: string
+                        description: Storage path or signed upload reference.
+                      contentType:
+                        type: string
+      responses:
+        "201":
+          description: Documents recorded.
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/offerings:
+    get:
+      tags: [House Offerings]
+      operationId: houseListOfferings
+      summary: List offerings
+      description: List offerings for the bound company. Requires `house:offerings:read`.
+      responses:
+        "200":
+          description: Offerings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseOfferingsEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [House Offerings]
+      operationId: houseCreateOffering
+      summary: Create offering
+      description: Create an asset package under the bound company. Requires `house:offerings:write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                originatorUserId:
+                  type: string
+                  format: uuid
+                type:
+                  type: string
+                location:
+                  type: string
+                jurisdiction:
+                  type: string
+                offeringProgram:
+                  type: string
+                  enum: [ipo, corporate_bond, project_financing]
+                licensedPathway:
+                  type: string
+                  enum: [issuing_house, finance_house]
+                tokenName:
+                  type: string
+                tokenSymbol:
+                  type: string
+                tokenSupply:
+                  type: integer
+      responses:
+        "201":
+          description: Created offering.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseOfferingEnvelope"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/offerings/{offeringId}:
+    get:
+      tags: [House Offerings]
+      operationId: houseGetOffering
+      summary: Get offering
+      description: Single offering for the bound company. Requires `house:offerings:read`.
+      parameters:
+        - $ref: "#/components/parameters/OfferingId"
+      responses:
+        "200":
+          description: Offering.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseOfferingEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    put:
+      tags: [House Offerings]
+      operationId: houseUpdateOffering
+      summary: Update offering
+      description: Update package fields. Requires `house:offerings:write`. Ownership is enforced to the bound company.
+      parameters:
+        - $ref: "#/components/parameters/OfferingId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated offering.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseOfferingEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/offerings/{offeringId}/submit:
+    post:
+      tags: [House Offerings]
+      operationId: houseSubmitOffering
+      summary: Submit offering for approval
+      description: Submit the package onto the approval route. Requires `house:offerings:write`.
+      parameters:
+        - $ref: "#/components/parameters/OfferingId"
+      responses:
+        "200":
+          description: Submitted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseOfferingEnvelope"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/offerings/{offeringId}/approve:
+    post:
+      tags: [House Offerings]
+      operationId: houseApproveOffering
+      summary: Advance company approval step
+      description: |
+        Advances the current company-controlled approval step only.
+        Platform-admin steps are not exposed. Requires `house:approvals:write`.
+      parameters:
+        - $ref: "#/components/parameters/OfferingId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [approverUserId]
+              properties:
+                approverUserId:
+                  type: string
+                  format: uuid
+                comment:
+                  type: string
+      responses:
+        "200":
+          description: Approval recorded.
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /house/offerings/{offeringId}/open-sale:
+    post:
+      tags: [House Offerings]
+      operationId: houseOpenSale
+      summary: Open primary sale
+      description: |
+        Saves primary-sale terms, opens registration acceptance when package approval is complete,
+        and returns prepared listing calldata when on-chain listing is still required.
+        Requires `house:sale:write`.
+      parameters:
+        - $ref: "#/components/parameters/OfferingId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                primarySalePrice:
+                  type: number
+                primarySaleCurrency:
+                  type: string
+                primarySaleTotalAvailable:
+                  type: number
+                primarySaleMinPurchase:
+                  type: number
+                primarySaleMaxPurchase:
+                  type: number
+                primarySaleStartDate:
+                  type: string
+                  format: date-time
+                primarySaleEndDate:
+                  type: string
+                  format: date-time
+                acceptingWaitlistRequests:
+                  type: boolean
+                chainId:
+                  type: integer
+      responses:
+        "200":
+          description: Sale terms saved. `listing` may be null when calldata is not yet available.
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/offerings/{offeringId}/registrations:
+    get:
+      tags: [House Registrations]
+      operationId: houseListRegistrations
+      summary: List registrations
+      description: Waitlist rows for the offering. Requires `house:registrations:read`.
+      parameters:
+        - $ref: "#/components/parameters/OfferingId"
+      responses:
+        "200":
+          description: Registrations.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/offerings/{offeringId}/registrations/{investorId}/approve:
+    post:
+      tags: [House Registrations]
+      operationId: houseApproveRegistration
+      summary: Approve and complete registration
+      description: |
+        Approves then completes registration so status becomes `whitelisted`.
+        Requires `house:registrations:write`.
+      parameters:
+        - $ref: "#/components/parameters/OfferingId"
+        - name: investorId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Registration completed.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/offerings/{offeringId}/intents/{intentId}/settle:
+    post:
+      tags: [House Settlement]
+      operationId: houseSettleIntent
+      summary: Settle purchase intent
+      description: Settle a bank intent for this offering only. Requires `house:settlement:write`.
+      parameters:
+        - $ref: "#/components/parameters/OfferingId"
+        - name: intentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Settled.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/offerings/{offeringId}/report:
+    get:
+      tags: [House Settlement]
+      operationId: houseGetReport
+      summary: Investor report
+      description: Investor report payload for the offering. Requires `house:reports:read`.
+      parameters:
+        - $ref: "#/components/parameters/OfferingId"
+      responses:
+        "200":
+          description: Report payload.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: Broker API key, `jvpk_<prefix>_<secret>`.
+      description: Partner API key (broker or house), `jvpk_<prefix>_<secret>`.
     apiKeyHeader:
       type: apiKey
       in: header
       name: X-Api-Key
-      description: Broker API key, `jvpk_<prefix>_<secret>`.
+      description: Partner API key (broker or house), `jvpk_<prefix>_<secret>`.
   parameters:
     AssetId:
       name: assetId
@@ -509,6 +1022,13 @@ components:
       schema:
         type: string
         format: uuid
+    OfferingId:
+      name: offeringId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   responses:
     Unauthorized:
       description: API key is missing or invalid.
@@ -519,7 +1039,7 @@ components:
           example:
             error: Invalid partner API key.
     Forbidden:
-      description: Partner API is disabled, or the key lacks the required scope.
+      description: Partner API is disabled, the key lacks the required scope, or the audience does not match the route.
       content:
         application/json:
           schema:
@@ -530,6 +1050,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ValidationError"
+    NotFound:
+      description: Resource not found for this House key.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     InvestorNotFound:
       description: No investor is linked for this external user id.
       content:
@@ -539,6 +1065,104 @@ components:
           example:
             error: Investor link not found.
   schemas:
+    HouseCompany:
+      type: object
+      properties:
+        companyId:
+          type: string
+          format: uuid
+        legalName:
+          type: string
+        registrationNumber:
+          type: string
+        jurisdiction:
+          type: string
+        licensedPathway:
+          type: string
+          nullable: true
+        licensedPathways:
+          type: array
+          nullable: true
+          items:
+            type: string
+        kybVerified:
+          type: boolean
+        verificationStatus:
+          type: string
+        managerEntityLegalName:
+          type: string
+          nullable: true
+        managerLicenseNote:
+          type: string
+          nullable: true
+    HouseCompanyEnvelope:
+      type: object
+      required: [company]
+      properties:
+        company:
+          $ref: "#/components/schemas/HouseCompany"
+    HouseOffering:
+      type: object
+      properties:
+        offeringId:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+        offeringProgram:
+          type: string
+          nullable: true
+        licensedPathway:
+          type: string
+          nullable: true
+        verificationStatus:
+          type: string
+        acceptingWaitlistRequests:
+          type: boolean
+        primarySaleListedOnChain:
+          type: boolean
+        isPrimarySaleActive:
+          type: boolean
+        primarySalePrice:
+          nullable: true
+          oneOf:
+            - type: number
+            - type: string
+        primarySaleCurrency:
+          type: string
+          nullable: true
+        primarySaleTotalAvailable:
+          nullable: true
+          oneOf:
+            - type: number
+            - type: string
+    HouseOfferingEnvelope:
+      type: object
+      required: [offering]
+      properties:
+        offering:
+          $ref: "#/components/schemas/HouseOffering"
+        message:
+          type: string
+        completed:
+          type: boolean
+        listing:
+          nullable: true
+          type: object
+          additionalProperties: true
+    HouseOfferingsEnvelope:
+      type: object
+      required: [offerings]
+      properties:
+        offerings:
+          type: array
+          items:
+            $ref: "#/components/schemas/HouseOffering"
     Error:
       type: object
       required: [error]
@@ -1055,12 +1679,46 @@ components:
           type: string
           format: date-time
           nullable: true
+    PaymentInstructions:
+      type: object
+      nullable: true
+      properties:
+        paymentMethod:
+          type: string
+          enum: [usdc]
+        currency:
+          type: string
+          enum: [USDC]
+        amount:
+          type: number
+        tokenAmount:
+          type: number
+        receiveAddress:
+          type: string
+          description: Platform USDC settlement receive address.
+        chainId:
+          type: integer
+        paymentReference:
+          type: string
+        bankName:
+          type: string
+          nullable: true
+        accountName:
+          type: string
+          nullable: true
+        accountNumber:
+          type: string
+          nullable: true
     IntentEnvelope:
       type: object
       required: [intent]
       properties:
         intent:
           $ref: "#/components/schemas/Intent"
+        externalUserId:
+          type: string
+        paymentInstructions:
+          $ref: "#/components/schemas/PaymentInstructions"
     Holding:
       allOf:
         - $ref: "#/components/schemas/PathwayDisclosure"

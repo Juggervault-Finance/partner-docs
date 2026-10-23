@@ -25,3 +25,10 @@ Open `http://localhost:3000`.
 5. After DNS resolves, confirm `https://docs.juggervault.finance` loads.
 
 The API origin in examples is `https://api.juggervault.finance`. Use the origin issued with the broker API key if it differs. That hostname is separate from the docs domain.
+
+## Sandbox for BD and partners
+
+- Page: [sandbox.mdx](./sandbox.mdx)
+- Postman: [sandbox/juggervault-partner-api.postman_collection.json](./sandbox/juggervault-partner-api.postman_collection.json)
+
+Staging Partner USDC intents require `PLATFORM_USDC_RECEIVE_ADDRESS` and `DEFAULT_CHAIN_ID` on the backend service.

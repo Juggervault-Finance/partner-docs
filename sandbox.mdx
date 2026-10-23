@@ -1,0 +1,86 @@
+---
+title: "API sandbox"
+description: "Staging Partner API sandbox for Issuing Houses, Finance Houses, and brokers."
+---
+
+Use this page with the Postman collection to walk a partner through House packaging and Broker distribution on **staging**, without using a production key.
+
+## What BD hands to a partner
+
+1. This page (sandbox overview).
+2. The Postman collection file in this docs repo: `partner-docs/sandbox/juggervault-partner-api.postman_collection.json`.
+3. A **staging** House key and/or Broker key issued by a Juggervault administrator (shown once).
+4. The staging API origin for that key (set as Postman `baseUrl`, including `/api/partner/v1`).
+
+Partners do not generate keys themselves. An administrator creates the House or Broker partner record, enables Partner API, and issues the key under Admin.
+
+## Staging environment checklist (Juggervault ops)
+
+Before a sandbox session:
+
+| Variable | Purpose |
+| --- | --- |
+| `PLATFORM_USDC_RECEIVE_ADDRESS` | Platform wallet that receives Partner USDC settlement. Required or USDC intent create returns `503`. |
+| `DEFAULT_CHAIN_ID` | `80002` (Polygon Amoy) or `137` (Polygon mainnet). |
+
+Set these on the Render service that serves the staging Partner API. Migrations must include `kyc.investment_goal` and House Partner tables.
+
+## Interactive API reference
+
+The [API reference](/api-reference/introduction) is generated from OpenAPI. On the published Mintlify site, open an endpoint page and use **Try it** with:
+
+- Base URL: staging Partner API origin ending in `/api/partner/v1`
+- Auth: `Authorization: Bearer` or `X-Api-Key` with the staging `jvpk_…` key
+
+House routes are under `/house/*`. Broker routes are everything else under the same prefix. A House key cannot call broker routes, and a Broker key cannot call house routes.
+
+## Broker flow (distribution)
+
+Order matters. Registration and USDC purchase require an approved identity and a completed eligibility profile. Registration complete (`whitelisted`) is required before a USDC intent.
+
+| Step | Method | Path |
+| --- | --- | --- |
+| 1 | `POST` | `/investors/link` |
+| 2 | `POST` | `/investors/{externalUserId}/kyc-import` |
+| 3 | `PUT` | `/investors/{externalUserId}/profile` |
+| 4 | `POST` | `/assets/{assetId}/registration` |
+| 5 | Wait for `registration.completed` (or Admin/House complete registration) |
+| 6 | `POST` | `/assets/{assetId}/purchase-intents` |
+| 7 | `GET` | `/investors/{externalUserId}/intents` |
+| 8 | `GET` | `/investors/{externalUserId}/holdings` |
+
+`PUT /investors/{externalUserId}/profile` only updates investors linked to **this** broker key. Another broker’s `externalUserId` returns `404` `Investor link not found.`
+
+## House flow (issuance)
+
+| Step | Method | Path |
+| --- | --- | --- |
+| 1 | `GET` | `/house/company` |
+| 2 | `POST` | `/house/offerings` |
+| 3 | `POST` | `/house/offerings/{offeringId}/submit` |
+| 4 | `POST` | `/house/offerings/{offeringId}/approve` (company-controlled steps only) |
+| 5 | `POST` | `/house/offerings/{offeringId}/open-sale` |
+| 6 | `GET` | `/house/offerings/{offeringId}/registrations` |
+| 7 | `POST` | `/house/offerings/{offeringId}/registrations/{investorId}/approve` |
+| 8 | `GET` | `/house/offerings/{offeringId}/report` |
+
+Platform-admin approval steps stay on Admin. They are not House API endpoints.
+
+## Import the Postman collection
+
+1. Open Postman → Import → select `partner-docs/sandbox/juggervault-partner-api.postman_collection.json` from the repository.
+2. Set collection variables:
+   - `baseUrl` — staging origin including `/api/partner/v1`
+   - `brokerApiKey` — staging Broker `jvpk_…` key
+   - `houseApiKey` — staging House `jvpk_…` key
+   - `externalUserId`, `assetId` / `offeringId` as you progress
+3. Run the **Broker** folder, then the **House** folder (or House first if the offering does not exist yet).
+
+Do not put production keys in the collection. Rotate any key that was pasted into a shared demo machine.
+
+## Limits of the sandbox
+
+- Staging data can be reset. Do not treat balances or offerings as permanent.
+- Identity import does not approve KYC. An administrator or compliance process on staging must approve the investor before registration succeeds.
+- USDC intent create returns payment instructions. Auto-settlement from observed transfers is out of scope for this sandbox.
+- Bank-allocation create/settle helpers remain retired (`410`).

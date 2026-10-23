@@ -1,12 +1,31 @@
 ---
 title: "Purchase"
-description: "Issuer-directed bank-transfer purchase intents are retired."
+description: "Partner USDC purchase intents and retired bank allocation."
 ---
 
-Issuer-directed bank-transfer purchase intents are no longer available.
+## Partner USDC purchase intents
 
-Primary purchase for investors is from the Juggervault account balance in the application. Partner API routes that create or advance bank-transfer intents return `410` with:
+After registration is complete (`whitelisted`), create a Partner purchase intent:
+
+`POST /assets/{assetId}/purchase-intents`
+
+The response includes the intent and `paymentInstructions` with:
+
+- Platform USDC `receiveAddress`
+- Exact `amount` and `tokenAmount`
+- `paymentReference`
+- `chainId`
+
+`bankName`, `accountName`, and `accountNumber` are always `null` on this path. Use the same fields on `GET /purchase-intents/{intentId}` and `GET /investors/{externalUserId}/intents`.
+
+Record the investor transfer hash with `POST /purchase-intents/{intentId}/payment` (`bankReference` holds the hash or payment proof). That moves the intent to `payment_submitted`. Settlement is not automatic in this release.
+
+Requires `purchase:write`. The investor must be linked to the calling broker.
+
+## Issuer-directed bank allocation (retired)
+
+Issuer-directed bank-transfer purchase intents are no longer available on the bank path. Low-level bank create and settle helpers still return `410` with:
 
 `Issuer-directed bank allocation is no longer available. Purchase from your Juggervault account balance.`
 
-List and cancel routes for existing intents remain available for cleanup. See [Accounts and custody](/guides/accounts-and-custody) and [Fees](/guides/fees).
+Primary purchase in the hosted application remains from the Juggervault account balance. See [Accounts and custody](/guides/accounts-and-custody).

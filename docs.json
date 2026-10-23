@@ -21,6 +21,12 @@
       "description": "Guide for issuing partners and broker partners distributing Juggervault primary offerings."
     }
   },
+  "api": {
+    "baseUrl": "https://api.juggervault.finance/api/partner/v1",
+    "auth": {
+      "method": "bearer"
+    }
+  },
   "navigation": {
     "groups": [
       {
@@ -31,6 +37,7 @@
           "guides/broker-partners",
           "guides/access-pathways",
           "quickstart",
+          "sandbox",
           "going-live"
         ]
       },
@@ -73,12 +80,28 @@
           "GET /investors/{externalUserId}",
           "POST /investors/{externalUserId}/kyc-import",
           "GET /investors/{externalUserId}/kyc",
+          "PUT /investors/{externalUserId}/profile",
           "POST /assets/{assetId}/registration",
           "GET /assets/{assetId}/registration/{externalUserId}",
           "POST /assets/{assetId}/purchase-intents",
           "POST /purchase-intents/{intentId}/payment",
           "GET /purchase-intents/{intentId}",
-          "GET /investors/{externalUserId}/holdings"
+          "GET /investors/{externalUserId}/intents",
+          "GET /investors/{externalUserId}/holdings",
+          "GET /house/company",
+          "POST /house/company",
+          "POST /house/company/kyb",
+          "GET /house/offerings",
+          "POST /house/offerings",
+          "GET /house/offerings/{offeringId}",
+          "PUT /house/offerings/{offeringId}",
+          "POST /house/offerings/{offeringId}/submit",
+          "POST /house/offerings/{offeringId}/approve",
+          "POST /house/offerings/{offeringId}/open-sale",
+          "GET /house/offerings/{offeringId}/registrations",
+          "POST /house/offerings/{offeringId}/registrations/{investorId}/approve",
+          "POST /house/offerings/{offeringId}/intents/{intentId}/settle",
+          "GET /house/offerings/{offeringId}/report"
         ]
       }
     ]
