@@ -64,7 +64,7 @@ Issuing Houses and Finance Houses that operate deal lifecycle from their own sys
 | Open primary sale | `POST /house/offerings/{offeringId}/open-sale` | `house:sale:write` |
 | List registrations | `GET /house/offerings/{offeringId}/registrations` | `house:registrations:read` |
 | Admit investor (`whitelisted`) | `POST .../registrations/{investorId}/approve` | `house:registrations:write` |
-| Settle bank intent | `POST .../intents/{intentId}/settle` | `house:settlement:write` |
+| Settle intent (retired, returns `410`) | `POST .../intents/{intentId}/settle` | `house:settlement:write` |
 | Investor report | `GET /house/offerings/{offeringId}/report` | `house:reports:read` |
 
 `open-sale` saves primary-sale terms through the same services as the hosted application, opens registration acceptance when package approval is complete, and returns prepared listing calldata when on-chain listing is still required. It does not bypass factory-admin signatures.

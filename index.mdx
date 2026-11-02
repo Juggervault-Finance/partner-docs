@@ -32,7 +32,7 @@ The path is always `/api/partner/v1`. Use the API origin issued with the key whe
     Submit identity data collected by the partner. Juggervault verifies the investor before registration.
   </Card>
   <Card title="Open a purchase" icon="receipt" href="/flows/purchase">
-    Create a primary purchase intent and submit the bank payment reference.
+    Create a primary purchase intent and record the investor's USDC transfer reference.
   </Card>
 </CardGroup>
 
@@ -55,7 +55,7 @@ The path is always `/api/partner/v1`. Use the API origin issued with the key whe
     `POST /assets/{assetId}/registration` after verification is approved and the platform account is open. Purchase is available only after the offering operator completes registration. The status is then `whitelisted`.
   </Step>
   <Step title="Purchase and holdings">
-    Create a purchase intent, submit the bank reference, then read holdings after settlement.
+    Create a purchase intent, pay the USDC amount to the platform receive address, and record the transfer reference. Holdings change only when the purchase settles. See [Purchase](/flows/purchase).
   </Step>
 </Steps>
 

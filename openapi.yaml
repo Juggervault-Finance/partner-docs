@@ -953,8 +953,10 @@ paths:
     post:
       tags: [House Settlement]
       operationId: houseSettleIntent
-      summary: Settle purchase intent
-      description: Settle a bank intent for this offering only. Requires `house:settlement:write`.
+      summary: Settle purchase intent (retired)
+      description: |
+        Retired in this release. Bank allocation settlement is no longer available, and this route does not
+        settle Partner USDC intents. After the offering and intent checks it returns `410`. Requires `house:settlement:write`.
       parameters:
         - $ref: "#/components/parameters/OfferingId"
         - name: intentId
@@ -964,8 +966,12 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
-          description: Settled.
+        "410":
+          description: "Issuer-directed bank allocation is no longer available. Purchase from your Juggervault account balance."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "404":
           $ref: "#/components/responses/NotFound"
         "401":
@@ -1691,6 +1697,7 @@ components:
           enum: [USDC]
         amount:
           type: number
+          description: Units multiplied by the unit price. Does not include the execution fee.
         tokenAmount:
           type: number
         receiveAddress:

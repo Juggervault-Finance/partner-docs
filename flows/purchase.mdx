@@ -12,19 +12,19 @@ After registration is complete (`whitelisted`), create a Partner purchase intent
 The response includes the intent and `paymentInstructions` with:
 
 - Platform USDC `receiveAddress`
-- Exact `amount` and `tokenAmount`
+- Exact `amount` and `tokenAmount`. `amount` is the units multiplied by the unit price. It does not include the execution fee. See [Fees](/guides/fees).
 - `paymentReference`
 - `chainId`
 
 `bankName`, `accountName`, and `accountNumber` are always `null` on this path. Use the same fields on `GET /purchase-intents/{intentId}` and `GET /investors/{externalUserId}/intents`.
 
-Record the investor transfer hash with `POST /purchase-intents/{intentId}/payment` (`bankReference` holds the hash or payment proof). That moves the intent to `payment_submitted`. Settlement is not automatic in this release.
+Record the investor transfer hash with `POST /purchase-intents/{intentId}/payment` (`bankReference` holds the hash or payment proof). That moves the intent to `payment_submitted`. Settlement is not automatic, and neither the Partner API nor the House API settles a Partner USDC intent in this release. `POST /house/offerings/{offeringId}/intents/{intentId}/settle` returns `410`.
 
 Requires `purchase:write`. The investor must be linked to the calling broker.
 
 ## Issuer-directed bank allocation (retired)
 
-Issuer-directed bank-transfer purchase intents are no longer available on the bank path. Low-level bank create and settle helpers still return `410` with:
+Issuer-directed bank-transfer purchase intents are no longer available on the bank path. Bank create and settle routes return `410` with:
 
 `Issuer-directed bank allocation is no longer available. Purchase from your Juggervault account balance.`
 

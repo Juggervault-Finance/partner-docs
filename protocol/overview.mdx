@@ -5,7 +5,7 @@ description: "How Juggervault issues project units, settles a primary purchase, 
 
 Juggervault issues project units on a permissioned primary sale. The platform decides who may invest. An investor receives units only after identity verification, an open platform account, and completed registration for that offering.
 
-The Partner API does not call the issuance contracts, and it does not accept or return an account address. A partner records a bank-transfer purchase intent. See [Accounts and custody](/guides/accounts-and-custody) and [Purchase](/flows/purchase).
+The Partner API does not call the issuance contracts, and it does not accept or return an account address. A partner records a Partner USDC purchase intent. See [Accounts and custody](/guides/accounts-and-custody) and [Purchase](/flows/purchase).
 
 ## Life of an offering
 
@@ -23,7 +23,7 @@ The Partner API does not call the issuance contracts, and it does not accept or 
     The offer operator completes registration for that investor on that offering. Until this step is done, the investor cannot purchase.
   </Step>
   <Step title="Purchase">
-    An account-balance purchase issues units to the platform account. The investor pays the share price plus the execution fee. See [Fees](/guides/fees). Partner API bank-transfer purchase intents are retired. See [Purchase](/flows/purchase).
+    An account-balance purchase issues units to the platform account. The investor pays the share price plus the execution fee. See [Fees](/guides/fees). A Partner USDC intent records the investor's payment to the platform receive address. Issuer-directed bank allocation is retired. See [Purchase](/flows/purchase).
   </Step>
   <Step title="Dividend and buyback">
     Dividends and buyback, where the offering provides them, follow units issued to the platform account.
