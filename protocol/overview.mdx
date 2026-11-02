@@ -23,7 +23,7 @@ The Partner API does not call the issuance contracts, and it does not accept or 
     The offer operator completes registration for that investor on that offering. Until this step is done, the investor cannot purchase.
   </Step>
   <Step title="Purchase">
-    An account-balance purchase issues units to the platform account. The investor pays the share price plus the execution fee. See [Fees](/guides/fees). A Partner USDC intent records the investor's payment to the platform receive address. Issuer-directed bank allocation is retired. See [Purchase](/flows/purchase).
+    An account-balance purchase issues units to the platform account. The investor pays the share price plus the execution fee. See [Fees](/guides/fees). A Partner USDC intent records the investor's payment into their own Juggervault account, including the execution fee. Juggervault then settles the purchase from that account. Issuer-directed bank allocation is retired. See [Purchase](/flows/purchase).
   </Step>
   <Step title="Dividend and buyback">
     Dividends and buyback, where the offering provides them, follow units issued to the platform account.

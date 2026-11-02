@@ -20,8 +20,11 @@ Before a sandbox session:
 
 | Variable | Purpose |
 | --- | --- |
-| `PLATFORM_USDC_RECEIVE_ADDRESS` | Platform wallet that receives Partner USDC settlement. Required or USDC intent create returns `503`. |
 | `DEFAULT_CHAIN_ID` | `80002` (Polygon Amoy) or `137` (Polygon mainnet). |
+| `SMART_WALLET_VERIFYING_KEY` | Signs platform gas sponsorship for account transactions. Without it, Partner settlement stops with `Insufficient gas sponsorship` and no funds move. |
+| `SMART_WALLET_BUNDLER_KEY` | Submits sponsored account transactions. |
+
+The paymaster EntryPoint deposit must cover settlement gas. When it is too low, settlement is not submitted and is retried after the deposit is topped up.
 
 Set these on the Render service that serves the staging Partner API. Migrations must include `kyc.investment_goal` and House Partner tables.
 
@@ -82,5 +85,5 @@ Do not put production keys in the collection. Rotate any key that was pasted int
 
 - Staging data can be reset. Do not treat balances or offerings as permanent.
 - Identity import does not approve KYC. An administrator or compliance process on staging must approve the investor before registration succeeds.
-- USDC intent create returns payment instructions. Auto-settlement from observed transfers is out of scope for this sandbox.
+- USDC intent create returns payment instructions with the investor's account address. Settlement runs after the transfer hash is recorded and needs a readable transfer on the staging chain.
 - Bank-allocation create/settle helpers remain retired (`410`).

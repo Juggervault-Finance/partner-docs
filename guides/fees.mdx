@@ -24,4 +24,6 @@ The broker share is 70% of the 1% fee, which is 0.7% of the share consideration.
 
 Placement fees, ordinarily 2% to 4% of capital raised, are invoiced offline to the asset owner. They are separate from the execution fee.
 
-On a Partner API purchase intent, `paymentInstructions.amount` is the share consideration only: the units multiplied by the unit price. It does not include the execution fee. Account-balance purchases made by the investor after sign-in collect the fee with the payment.
+On a Partner API purchase intent, `paymentInstructions.amount` includes the execution fee: the units multiplied by the unit price, plus 1%. For example, 5 units at 10 USDC is 50 USDC for the shares plus 0.5 USDC execution fee, so the investor pays 50.5 USDC. Account-balance purchases made by the investor after sign-in also collect the fee with the payment.
+
+Juggervault pays the processing fee for Partner settlement transactions. It is not taken from the investor's USDC.

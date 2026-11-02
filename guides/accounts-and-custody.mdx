@@ -17,7 +17,7 @@ Custody is full platform custody, segregated by investor.
 | Account | One account per investor. Holdings are not pooled. |
 | Controlling key | Held by Juggervault in the platform vault. The investor does not co-sign. The broker does not co-sign. |
 | Investor access | Sign-in to the same account. The investor does not receive a private key. |
-| Partner access | `externalUserId`, status, and holdings. The partner does not receive a key or an account address. |
+| Partner access | `externalUserId`, status, and holdings. The partner does not receive a key. The account address appears only as `receiveAddress` on a purchase intent, for the USDC payment. |
 | Omnibus or nominee custody | Not offered. |
 | Broker custody | Not offered. |
 
@@ -39,7 +39,7 @@ An external account cannot be linked to an investor's Juggervault account. Regis
     `POST /assets/{assetId}/registration` uses the platform account. If the account is not open, the response is `400` and `error` is `Complete account setup in Juggervault before requesting registration.`
   </Step>
   <Step title="Settlement">
-    If a broker-originated purchase settles, identity verification is already approved, and the account was not opened, Juggervault attempts to open it at settlement. Settlement does not replace account opening before registration.
+    A Partner USDC intent requires the open account, because the investor pays into it. If the account is not open, `POST /assets/{assetId}/purchase-intents` returns `409`.
   </Step>
 </Steps>
 
@@ -48,9 +48,9 @@ An external account cannot be linked to an investor's Juggervault account. Regis
 | Path | Who starts it | What the investor pays | Where units are recorded |
 | --- | --- | --- | --- |
 | Account balance | The investor, after sign-in, in the application | Cash already held in the Juggervault account | Issued to the platform account at purchase |
-| Partner USDC intent | The broker, via Partner API | USDC to the platform settlement receive address returned on the intent | Issued after settlement (not automatic on create) |
+| Partner USDC intent | The broker, via Partner API | USDC, including the 1% execution fee, sent to the investor's own Juggervault account address on the intent | Issued to the platform account when Juggervault settles the intent |
 
-Partner `POST /assets/{assetId}/purchase-intents` returns a **platform** USDC receive address for white-label payment screens. It does not return an investor custody key or smart-wallet private material. Issuer-directed bank allocation remains retired. See [Purchase](/flows/purchase).
+Partner `POST /assets/{assetId}/purchase-intents` returns the investor's own Juggervault account address as `receiveAddress` for white-label payment screens. The USDC stays in the investor's account until the purchase settles. The response does not return a custody key or other account credentials. Juggervault pays the processing fee for settlement, so the investor's USDC goes to the purchase in full. Issuer-directed bank allocation remains retired. See [Purchase](/flows/purchase).
 
 Dividends and buyback, where an offering provides them, apply to units issued to the platform account. Read holdings with `GET /investors/{externalUserId}/holdings`. That response contains units and share of the project. How issuance treats that credit is described in [Protocol](/protocol/overview).
 

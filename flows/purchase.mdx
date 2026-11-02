@@ -1,6 +1,6 @@
 ---
 title: "Purchase"
-description: "Partner USDC purchase intents and retired bank allocation."
+description: "Partner USDC purchase intents, settlement, and retired bank allocation."
 ---
 
 ## Partner USDC purchase intents
@@ -9,16 +9,39 @@ After registration is complete (`whitelisted`), create a Partner purchase intent
 
 `POST /assets/{assetId}/purchase-intents`
 
+The investor's Juggervault account must be open. If it is not, the response is `409` and `error` is `The investor's Juggervault account must be set up before creating a purchase intent.`
+
 The response includes the intent and `paymentInstructions` with:
 
-- Platform USDC `receiveAddress`
-- Exact `amount` and `tokenAmount`. `amount` is the units multiplied by the unit price. It does not include the execution fee. See [Fees](/guides/fees).
+- `receiveAddress`: the investor's own Juggervault account address. The investor sends the USDC there.
+- Exact `amount` and `tokenAmount`. `amount` includes the 1% execution fee: the units multiplied by the unit price, plus 1%. See [Fees](/guides/fees).
 - `paymentReference`
 - `chainId`
 
+Example: 5 units at 10 USDC is 50 USDC for the shares plus 0.5 USDC execution fee, so `amount` is `50.5`.
+
 `bankName`, `accountName`, and `accountNumber` are always `null` on this path. Use the same fields on `GET /purchase-intents/{intentId}` and `GET /investors/{externalUserId}/intents`.
 
-Record the investor transfer hash with `POST /purchase-intents/{intentId}/payment` (`bankReference` holds the hash or payment proof). That moves the intent to `payment_submitted`. Settlement is not automatic, and neither the Partner API nor the House API settles a Partner USDC intent in this release. `POST /house/offerings/{offeringId}/intents/{intentId}/settle` returns `410`.
+## Settlement
+
+After the investor sends the USDC, record the transfer hash with `POST /purchase-intents/{intentId}/payment`. `bankReference` must be the transaction hash (`0x` followed by 64 hexadecimal characters). A hash already recorded on another intent returns `409`. The intent moves to `payment_submitted`.
+
+Juggervault then settles the purchase without further calls:
+
+1. It reads the transfer and confirms that it paid at least `amount` in USDC into the investor's account, and that the account still holds that amount.
+2. The investor's account buys the units through the primary sale. Units are issued to that account.
+3. The intent moves to `settled`. `purchase.settled`, which carries the `intentId`, and `holding.updated` are sent. See [Webhooks](/guides/webhooks).
+
+Juggervault pays the processing fee for both settlement transactions. It is never deducted from the investor's USDC, so the full `amount` goes to the purchase. If the processing fee cannot be covered, nothing is submitted, the USDC stays in the investor's account, and settlement is retried.
+
+| Outcome | Intent status |
+| --- | --- |
+| Transfer not yet readable on the network | Stays `payment_submitted`. Settlement is retried every few minutes. |
+| Transfer below `amount`, sent to another address, or failed | Returns to `pending_payment`. Record a new transfer hash. |
+| Purchase could not be completed | Stays `payment_submitted`. The USDC stays in the investor's account and settlement is retried. |
+| Units issued | `settled` |
+
+The House API does not settle Partner USDC intents. `POST /house/offerings/{offeringId}/intents/{intentId}/settle` returns `410`.
 
 Requires `purchase:write`. The investor must be linked to the calling broker.
 

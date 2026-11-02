@@ -20,7 +20,7 @@ Juggervault administration records the firm name and contact email and issues th
 | Identity data | Optional. Import does not approve the investor. The investor still completes verification, eligibility, and an accredited self-certification in the application. |
 | Account | The investor sets a password from Forgot password if none exists, then signs in, before registration. |
 | Registration | `consents.platformTerms` set to `true`, and the other acknowledgements the investor has accepted. |
-| Payment | The investor pays the USDC amount on the intent to the platform receive address. After payment, the transfer hash or payment reference. |
+| Payment | The investor sends the USDC amount on the intent, which includes the 1% execution fee, to the investor's own Juggervault account address on the intent. After payment, the transfer hash. |
 | Webhooks | An HTTPS URL and a signing secret, if the broker wants notices. Verify `X-Juggervault-Signature` on the raw body. |
 
 The order of calls is in [Introduction](/). Each refusal is in [Errors](/guides/errors).
@@ -35,7 +35,7 @@ The order of calls is in [Introduction](/). Each refusal is in [Errors](/guides/
 | Identity decision | Juggervault approves or rejects verification. A partner attestation is not accepted as approval. |
 | Account | One platform account per investor, opened when the investor signs in after approval. Full platform custody. See [Accounts and custody](/guides/accounts-and-custody). |
 | Registration | A registration request. Purchase is available only after the offering operator completes registration. The status is then `whitelisted`. |
-| Purchase | A Partner USDC intent. `paymentInstructions` contains the platform receive address, `amount`, `chainId`, and `paymentReference`. The response does not include a bank account. Neither the Partner API nor the House API settles the intent in this release. See [Purchase](/flows/purchase). |
+| Purchase | A Partner USDC intent. `paymentInstructions` contains the investor's Juggervault account address, `amount`, `chainId`, and `paymentReference`. The response does not include a bank account. After the transfer hash is recorded, Juggervault verifies the payment and settles the purchase. See [Purchase](/flows/purchase). |
 | Holdings | Units and share of the project. Dividends and buyback follow units issued to the platform account. |
 | Notices | `kyc.approved`, `kyc.rejected`, `registration.approved`, `purchase.settled`, and `holding.updated`. |
 | Fee | 1% on top of the share consideration. The broker share on a Partner API purchase is 0.7% of that consideration, paid by Juggervault to the broker's commission payout account. See [Fees](/guides/fees). |

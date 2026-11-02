@@ -414,7 +414,9 @@ paths:
       summary: Create a USDC purchase intent
       description: |
         Creates an on-chain USDC Partner purchase intent after registration is complete.
-        Returns `paymentInstructions` with the platform USDC receive address and exact amount.
+        Returns `paymentInstructions` with the investor's Juggervault account address and the exact amount,
+        which includes the 1% execution fee (5 units at 10 USDC is 50.5 USDC).
+        The investor's account must be open.
         Requires `purchase:write`. Stamps `purchaseChannel` as `partner_api`.
         Issuer-directed bank allocation is not used on this path.
       parameters:
@@ -444,21 +446,24 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
-        "503":
-          description: Platform USDC settlement address is not configured.
+        "409":
+          description: The investor's Juggervault account is not set up.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+              example:
+                error: The investor's Juggervault account must be set up before creating a purchase intent.
   /purchase-intents/{intentId}/payment:
     post:
       tags: [Purchase]
       operationId: submitPurchasePayment
       summary: Submit payment proof
       description: |
-        Records a USDC transfer hash or payment reference on an on-chain Partner intent.
-        Requires `purchase:write`. Does not settle the purchase.
-        Bank-allocation intents remain retired (`410`).
+        Records the transaction hash of the USDC transfer into the investor's account and moves the intent to
+        `payment_submitted`. Juggervault then verifies the transfer and settles the purchase; the intent moves to
+        `settled` and `purchase.settled` is sent. Settlement gas is platform-sponsored and never taken from the
+        investor's USDC. Requires `purchase:write`. Bank-allocation intents remain retired (`410`).
       parameters:
         - $ref: "#/components/parameters/IntentId"
       requestBody:
@@ -471,7 +476,8 @@ paths:
               properties:
                 bankReference:
                   type: string
-                  maxLength: 255
+                  pattern: "^0x[a-fA-F0-9]{64}$"
+                  description: Transaction hash of the USDC transfer.
                 investorNote:
                   type: string
       responses:
@@ -485,6 +491,12 @@ paths:
           $ref: "#/components/responses/ValidationFailed"
         "403":
           description: The intent is not linked to this broker, or the key lacks `purchase:write`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: The transfer is already recorded against another purchase intent.
           content:
             application/json:
               schema:
@@ -955,8 +967,9 @@ paths:
       operationId: houseSettleIntent
       summary: Settle purchase intent (retired)
       description: |
-        Retired in this release. Bank allocation settlement is no longer available, and this route does not
-        settle Partner USDC intents. After the offering and intent checks it returns `410`. Requires `house:settlement:write`.
+        Retired in this release. Bank allocation settlement is no longer available. Partner USDC intents settle
+        automatically after the transfer hash is recorded, so this route does not settle them.
+        After the offering and intent checks it returns `410`. Requires `house:settlement:write`.
       parameters:
         - $ref: "#/components/parameters/OfferingId"
         - name: intentId
@@ -1697,12 +1710,12 @@ components:
           enum: [USDC]
         amount:
           type: number
-          description: Units multiplied by the unit price. Does not include the execution fee.
+          description: Units multiplied by the unit price, plus the 1% execution fee. 5 units at 10 USDC is 50.5.
         tokenAmount:
           type: number
         receiveAddress:
           type: string
-          description: Platform USDC settlement receive address.
+          description: The investor's own Juggervault account address. Send the USDC here.
         chainId:
           type: integer
         paymentReference:
