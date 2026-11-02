@@ -49,8 +49,11 @@ Order matters. Registration and USDC purchase require an approved identity and a
 | 4 | `POST` | `/assets/{assetId}/registration` |
 | 5 | Wait for `registration.completed` (or Admin/House complete registration) |
 | 6 | `POST` | `/assets/{assetId}/purchase-intents` |
-| 7 | `GET` | `/investors/{externalUserId}/intents` |
-| 8 | `GET` | `/investors/{externalUserId}/holdings` |
+| 7 | Send `paymentInstructions.amount` in USDC to `paymentInstructions.receiveAddress` |
+| 8 | `POST` | `/purchase-intents/{intentId}/payment` |
+| 9 | `GET` | `/purchase-intents/{intentId}` (repeat until `settled`) |
+| 10 | `GET` | `/investors/{externalUserId}/intents` |
+| 11 | `GET` | `/investors/{externalUserId}/holdings` |
 
 `PUT /investors/{externalUserId}/profile` only updates investors linked to **this** broker key. Another broker’s `externalUserId` returns `404` `Investor link not found.`
 
@@ -77,6 +80,7 @@ Platform-admin approval steps stay on Admin. They are not House API endpoints.
    - `brokerApiKey`: staging Broker `jvpk_…` key
    - `houseApiKey`: staging House `jvpk_…` key
    - `externalUserId`, `assetId` / `offeringId` as you progress
+   - `paymentTxHash`: the hash of the USDC transfer, before **Record USDC payment**. `intentId` is set when the intent is created.
 3. Run the **Broker** folder, then the **House** folder (or House first if the offering does not exist yet).
 
 Do not put production keys in the collection. Rotate any key that was pasted into a shared demo machine.

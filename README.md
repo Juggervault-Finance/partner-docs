@@ -31,4 +31,4 @@ The API origin in examples is `https://api.juggervault.finance`. Use the origin 
 - Page: [sandbox.mdx](./sandbox.mdx)
 - Postman: [sandbox/juggervault-partner-api.postman_collection.json](./sandbox/juggervault-partner-api.postman_collection.json)
 
-Staging Partner USDC intents require `PLATFORM_USDC_RECEIVE_ADDRESS` and `DEFAULT_CHAIN_ID` on the backend service.
+Staging Partner USDC settlement requires `DEFAULT_CHAIN_ID`, `SMART_WALLET_VERIFYING_KEY`, and `SMART_WALLET_BUNDLER_KEY` on the backend service. See [sandbox.mdx](./sandbox.mdx).

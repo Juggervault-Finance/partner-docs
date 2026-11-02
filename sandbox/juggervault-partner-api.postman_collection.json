@@ -38,6 +38,10 @@
       "value": ""
     },
     {
+      "key": "paymentTxHash",
+      "value": ""
+    },
+    {
       "key": "investorId",
       "value": ""
     },
@@ -169,6 +173,40 @@
               "raw": "{\n  \"externalUserId\": \"{{externalUserId}}\",\n  \"tokenAmount\": 10\n}"
             },
             "url": "{{baseUrl}}/assets/{{assetId}}/purchase-intents"
+          }
+        },
+        {
+          "name": "Record USDC payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{brokerApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bankReference\": \"{{paymentTxHash}}\"\n}"
+            },
+            "url": "{{baseUrl}}/purchase-intents/{{intentId}}/payment"
+          }
+        },
+        {
+          "name": "Get purchase intent",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{brokerApiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/purchase-intents/{{intentId}}"
           }
         },
         {
