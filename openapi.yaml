@@ -415,7 +415,7 @@ paths:
       description: |
         Creates an on-chain USDC Partner purchase intent after registration is complete.
         Returns `paymentInstructions` with the investor's Juggervault account address and the exact amount,
-        which includes the 1% execution fee (5 units at 10 USDC is 50.5 USDC).
+        which includes the offering's execution fee (5 units at 10 USDC on an offering at 1% is 50.5 USDC).
         The investor's account must be open.
         Requires `purchase:write`. Stamps `purchaseChannel` as `partner_api`.
         Issuer-directed bank allocation is not used on this path.
@@ -1318,6 +1318,9 @@ components:
               type: boolean
             primarySalePrice:
               $ref: "#/components/schemas/Decimal"
+            executionFeeRate:
+              type: number
+              description: Execution fee on top of the share consideration, as a fraction (0.0075 is 0.75%).
             primarySaleCurrency:
               type: string
             primarySaleTotalAvailable:
@@ -1373,6 +1376,9 @@ components:
               type: string
             primarySalePrice:
               $ref: "#/components/schemas/Decimal"
+            executionFeeRate:
+              type: number
+              description: Execution fee on top of the share consideration, as a fraction (0.0075 is 0.75%).
             primarySaleCurrency:
               type: string
             primarySaleTotalAvailable:
@@ -1710,7 +1716,7 @@ components:
           enum: [USDC]
         amount:
           type: number
-          description: Units multiplied by the unit price, plus the 1% execution fee. 5 units at 10 USDC is 50.5.
+          description: Units multiplied by the unit price, plus the offering's execution fee. 5 units at 10 USDC on an offering at 1% is 50.5.
         tokenAmount:
           type: number
         receiveAddress:

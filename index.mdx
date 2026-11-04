@@ -55,7 +55,7 @@ The path is always `/api/partner/v1`. Use the API origin issued with the key whe
     `POST /assets/{assetId}/registration` after verification is approved and the platform account is open. Purchase is available only after the offering operator completes registration. The status is then `whitelisted`.
   </Step>
   <Step title="Purchase and holdings">
-    Create a purchase intent, send the USDC amount (including the 1% execution fee) to the investor's Juggervault account address on the intent, and record the transfer hash. Juggervault then settles the purchase. Holdings change only when it settles. See [Purchase](/flows/purchase).
+    Create a purchase intent, send the USDC amount (including the offering's execution fee) to the investor's Juggervault account address on the intent, and record the transfer hash. Juggervault then settles the purchase. Holdings change only when it settles. See [Purchase](/flows/purchase).
   </Step>
 </Steps>
 

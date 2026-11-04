@@ -20,7 +20,7 @@ Juggervault administration records the firm name and contact email and issues th
 | Identity data | Optional. Import does not approve the investor. The investor still completes verification, eligibility, and an accredited self-certification in the application. |
 | Account | The investor sets a password from Forgot password if none exists, then signs in, before registration. |
 | Registration | `consents.platformTerms` set to `true`, and the other acknowledgements the investor has accepted. |
-| Payment | The investor sends the USDC amount on the intent, which includes the 1% execution fee, to the investor's own Juggervault account address on the intent. After payment, the transfer hash. |
+| Payment | The investor sends the USDC amount on the intent, which includes the offering's execution fee, to the investor's own Juggervault account address on the intent. After payment, the transfer hash. |
 | Webhooks | An HTTPS URL and a signing secret, if the broker wants notices. Verify `X-Juggervault-Signature` on the raw body. |
 
 The order of calls is in [Introduction](/). Each refusal is in [Errors](/guides/errors).
@@ -38,7 +38,7 @@ The order of calls is in [Introduction](/). Each refusal is in [Errors](/guides/
 | Purchase | A Partner USDC intent. `paymentInstructions` contains the investor's Juggervault account address, `amount`, `chainId`, and `paymentReference`. The response does not include a bank account. After the transfer hash is recorded, Juggervault verifies the payment and settles the purchase. See [Purchase](/flows/purchase). |
 | Holdings | Units and share of the project. Dividends and buyback follow units issued to the platform account. |
 | Notices | `kyc.approved`, `kyc.rejected`, `registration.approved`, `purchase.settled`, and `holding.updated`. |
-| Fee | 1% on top of the share consideration. The broker share on a Partner API purchase is 0.7% of that consideration, paid by Juggervault to the broker's commission payout account. See [Fees](/guides/fees). |
+| Fee | The offering's execution fee on top of the share consideration (1.00%, 0.75%, or 0.50% by stated asset value, returned as `executionFeeRate`). The broker receives its agreed share of that fee, paid to the broker's commission payout account. See [Fees](/guides/fees). |
 
 ## What the broker does not receive
 

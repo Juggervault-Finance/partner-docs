@@ -48,7 +48,7 @@ An external account cannot be linked to an investor's Juggervault account. Regis
 | Path | Who starts it | What the investor pays | Where units are recorded |
 | --- | --- | --- | --- |
 | Account balance | The investor, after sign-in, in the application | Cash already held in the Juggervault account | Issued to the platform account at purchase |
-| Partner USDC intent | The broker, via Partner API | USDC, including the 1% execution fee, sent to the investor's own Juggervault account address on the intent | Issued to the platform account when Juggervault settles the intent |
+| Partner USDC intent | The broker, via Partner API | USDC, including the offering's execution fee, sent to the investor's own Juggervault account address on the intent | Issued to the platform account when Juggervault settles the intent |
 
 Partner `POST /assets/{assetId}/purchase-intents` returns the investor's own Juggervault account address as `receiveAddress` for white-label payment screens. The USDC stays in the investor's account until the purchase settles. The response does not return a custody key or other account credentials. Juggervault pays the processing fee for settlement, so the investor's USDC goes to the purchase in full. Issuer-directed bank allocation remains retired. See [Purchase](/flows/purchase).
 
