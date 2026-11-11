@@ -30,7 +30,7 @@ paths:
       operationId: getPathways
       summary: List licensed pathways
       description: |
-        Issuing House and Finance House, and the offering programs each pathway may distribute.
+        Issuing House, Finance House and Fund Manager, and the offering programs each pathway may distribute.
         This is not the access pathway (A, B, or C). Requires `catalog:read`.
       responses:
         "200":
@@ -58,13 +58,13 @@ paths:
           required: false
           schema:
             type: string
-            enum: [ipo, corporate_bond, project_financing]
+            enum: [ipo, corporate_bond, commercial_paper, fixed_deposit_note, project_financing, mutual_fund, reit, other]
         - name: licensedPathway
           in: query
           required: false
           schema:
             type: string
-            enum: [issuing_house, finance_house]
+            enum: [issuing_house, finance_house, fund_manager]
         - name: licensedParty
           in: query
           required: false
@@ -94,10 +94,10 @@ paths:
               examples:
                 program:
                   value:
-                    error: offeringProgram must be ipo, corporate_bond, or project_financing.
+                    error: "offeringProgram must be one of: ipo, corporate_bond, commercial_paper, fixed_deposit_note, project_financing, mutual_fund, reit, other."
                 pathway:
                   value:
-                    error: licensedPathway must be issuing_house or finance_house.
+                    error: "licensedPathway must be one of: issuing_house, finance_house, fund_manager."
                 mismatch:
                   value:
                     error: This offering program is not available on the selected pathway.
@@ -648,7 +648,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [issuing_house, finance_house]
+                    enum: [issuing_house, finance_house, fund_manager]
       responses:
         "200":
           description: Updated company.
@@ -744,10 +744,14 @@ paths:
                   type: string
                 offeringProgram:
                   type: string
-                  enum: [ipo, corporate_bond, project_financing]
+                  enum: [ipo, corporate_bond, commercial_paper, fixed_deposit_note, project_financing, mutual_fund, reit, other]
+                offeringProgramOther:
+                  type: string
+                  maxLength: 80
+                  description: Required when `offeringProgram` is `other`. The issuer's description of the offering type, shown in place of Other.
                 licensedPathway:
                   type: string
-                  enum: [issuing_house, finance_house]
+                  enum: [issuing_house, finance_house, fund_manager]
                 tokenName:
                   type: string
                 tokenSymbol:
@@ -1249,14 +1253,15 @@ components:
         offeringProgram:
           type: string
           nullable: true
-          enum: [ipo, corporate_bond, project_financing]
+          enum: [ipo, corporate_bond, commercial_paper, fixed_deposit_note, project_financing, mutual_fund, reit, other]
         offeringProgramLabel:
           type: string
           nullable: true
+          description: Program name. For `other`, the issuer's own description of the offering type.
         licensedPathway:
           type: string
           nullable: true
-          enum: [issuing_house, finance_house]
+          enum: [issuing_house, finance_house, fund_manager]
         licensedPathwayLabel:
           type: string
           nullable: true
@@ -1284,7 +1289,7 @@ components:
             properties:
               licensedPathway:
                 type: string
-                enum: [issuing_house, finance_house]
+                enum: [issuing_house, finance_house, fund_manager]
               label:
                 type: string
               offeringPrograms:
@@ -1295,7 +1300,7 @@ components:
                   properties:
                     offeringProgram:
                       type: string
-                      enum: [ipo, corporate_bond, project_financing]
+                      enum: [ipo, corporate_bond, commercial_paper, fixed_deposit_note, project_financing, mutual_fund, reit, other]
                     label:
                       type: string
     CatalogItem:

@@ -13,12 +13,15 @@ The routes on this site are the Partner API. They do not include a route to set 
 
 Access pathway A, B, or C is not a field in the Partner API. Licensed pathway is.
 
-`GET /pathways` requires `catalog:read`. It returns both licensed pathways and the offering programs each one may carry. It does not return access pathway A, B, or C, and it does not identify the licensed pathway on one deal.
+`GET /pathways` requires `catalog:read`. It returns every licensed pathway and the offering programs each one may carry. It does not return access pathway A, B, or C, and it does not identify the licensed pathway on one deal.
 
 | Licensed pathway | Code | Offering programs |
 | --- | --- | --- |
-| Issuing House | `issuing_house` | `ipo` (IPO), `corporate_bond` (Corporate Bond) |
+| Issuing House | `issuing_house` | `ipo` (IPO), `corporate_bond` (Corporate Bond), `commercial_paper` (Commercial Paper), `fixed_deposit_note` (Fixed Deposit Note), `other` (Other) |
 | Finance House | `finance_house` | `project_financing` (Project Financing) |
+| Fund Manager | `fund_manager` | `mutual_fund` (Mutual Fund), `reit` (REIT) |
+
+Project Financing records an issuing SPV and a security trustee. Mutual Fund and REIT record a trustee and no SPV. The Issuing House programs record neither.
 
 `GET /catalog` accepts optional query filters `licensedPathway`, `offeringProgram`, and `licensedParty`. Omit them to receive every listed offering. `licensedParty` matches any part of the licensed party's legal name, without regard to case, and must be 255 characters or fewer. An unknown code, a program that is not allowed on that licensed pathway, or a name that is too long returns `400` and `{ "error": "..." }`. See [Errors](/guides/errors).
 
@@ -26,11 +29,11 @@ These fields are on each catalog item, on `listing.asset`, on each registration 
 
 | Field | Meaning |
 | --- | --- |
-| `offeringProgram` | `ipo`, `corporate_bond`, or `project_financing` |
-| `offeringProgramLabel` | IPO, Corporate Bond, or Project Financing |
-| `licensedPathway` | `issuing_house` or `finance_house` |
-| `licensedPathwayLabel` | Issuing House or Finance House |
-| `licensedPartyLegalName` | Legal name of the Issuing House or Finance House |
+| `offeringProgram` | One of the program codes above |
+| `offeringProgramLabel` | The program name. For `other`, the issuer's own description of the offering type |
+| `licensedPathway` | `issuing_house`, `finance_house` or `fund_manager` |
+| `licensedPathwayLabel` | Issuing House, Finance House or Fund Manager |
+| `licensedPartyLegalName` | Legal name of the Issuing House, Finance House or Fund Manager |
 | `licensedPartyLicenseNote` | License note, when recorded |
 | `trusteeLegalName` | Trustee, when the program records one |
 | `trusteeLicenseNote` | Trustee license note, when recorded |

@@ -48,12 +48,12 @@ When a required field fails request validation, the body is:
 
 | `error` |
 | --- |
-| `offeringProgram must be ipo, corporate_bond, or project_financing.` |
-| `licensedPathway must be issuing_house or finance_house.` |
+| `offeringProgram must be one of: ipo, corporate_bond, commercial_paper, fixed_deposit_note, project_financing, mutual_fund, reit, other.` |
+| `licensedPathway must be one of: issuing_house, finance_house, fund_manager.` |
 | `This offering program is not available on the selected pathway.` |
 | `licensedParty must be 255 characters or fewer.` |
 
-`selected pathway` in the third message means the licensed pathway, `issuing_house` or `finance_house`. It does not mean access pathway A, B, or C. Issuing House accepts `ipo` and `corporate_bond`. Finance House accepts `project_financing`.
+`selected pathway` in the third message means the licensed pathway: `issuing_house`, `finance_house` or `fund_manager`. It does not mean access pathway A, B, or C. Issuing House accepts `ipo`, `corporate_bond`, `commercial_paper`, `fixed_deposit_note` and `other`. Finance House accepts `project_financing`. Fund Manager accepts `mutual_fund` and `reit`.
 
 ## Identity already on file
 
