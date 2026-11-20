@@ -1504,7 +1504,8 @@ components:
           enum: [Nigerian]
         primaryIdType:
           type: string
-          enum: [nin, bvn, passport, driver_license, voters_card]
+          enum: [nin, bvn, passport]
+          description: BVN and NIN are checked against the national registries. An international passport is checked from the photo page the investor uploads when they complete verification on Juggervault.
         tin:
           type: string
           description: 8 to 20 letters, digits, or hyphens. Required in addition to the primary identity document.
@@ -1513,10 +1514,6 @@ components:
         bvn:
           type: string
         passportNumber:
-          type: string
-        driverLicenseNumber:
-          type: string
-        votersCardNumber:
           type: string
         address:
           type: string

@@ -13,9 +13,9 @@ The investor must already be linked.
 | --- | --- | --- |
 | `dateOfBirth` | Yes | `YYYY-MM-DD`. The investor must be at least 18. |
 | `nationality` | Yes | Accepted value: `Nigerian`. |
-| `primaryIdType` | Yes | `nin`, `bvn`, `passport`, `driver_license`, or `voters_card`. TIN is not a primary identity document. |
+| `primaryIdType` | Yes | `nin`, `bvn`, or `passport`. TIN is not a primary identity document. A driver's licence or voter's card is not accepted. |
 | `tin` | Yes | Tax Identification Number, in addition to the primary document. 8 to 20 letters, digits, or hyphens. |
-| `nin`, `bvn`, `passportNumber`, `driverLicenseNumber`, `votersCardNumber` | One | Send the field that matches `primaryIdType`. |
+| `nin`, `bvn`, `passportNumber` | One | Send the field that matches `primaryIdType`. A passport is verified from the photo page the investor uploads when they complete verification on Juggervault. |
 | `firstName`, `lastName` | No | Updates the profile name when present. |
 | `address`, `city`, `state`, `postalCode`, `country` | No | Stored when present. |
 | `partnerReference` | No | Partner case identifier. It is stored with the import and is not returned on the status read. |
