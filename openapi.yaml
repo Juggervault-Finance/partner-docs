@@ -1621,7 +1621,21 @@ components:
         kycStatus:
           type: string
           nullable: true
-          enum: [pending, under_review, approved, rejected]
+          enum: [not_submitted, pending, under_review, approved, rejected]
+          description: >-
+            `not_submitted` when the record holds only the investor profile and no identity document has been
+            submitted. `null` when no record exists.
+        verifiedByCompanies:
+          type: array
+          description: >-
+            Current verifications recorded by licensed companies. Each covers only that company's offerings.
+            Empty when there are none.
+          items:
+            type: object
+            properties:
+              companyId: { type: string, format: uuid }
+              companyName: { type: string }
+              expiresAt: { type: string, format: date-time }
         investorProfileRequired:
           type: boolean
         accreditedInvestorRequired:
