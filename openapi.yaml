@@ -23,6 +23,7 @@ tags:
   - name: House Offerings
   - name: House Registrations
   - name: House Settlement
+  - name: House Investors
 paths:
   /pathways:
     get:
@@ -1008,6 +1009,168 @@ paths:
           description: Report payload.
         "404":
           $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/investors/attestations:
+    get:
+      tags: [House Investors]
+      operationId: houseListAttestations
+      summary: List verified investors
+      description: Attestations recorded by the bound company. Requires `house:investors:read`.
+      responses:
+        "200":
+          description: Attestations, newest first.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [House Investors]
+      operationId: houseCreateAttestation
+      summary: Record a verified investor
+      description: >-
+        Attest that the company has verified this investor. Send the email only, or the full identity and
+        compliance fields described in the Issuing partners guide. Juggervault emails the investor a single-use
+        link. Requires `house:investors:write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, declarationAccepted, declarationVersion]
+              properties:
+                email: { type: string, format: email }
+                legalFirstName: { type: string }
+                legalMiddleName: { type: string }
+                legalLastName: { type: string }
+                dateOfBirth: { type: string, format: date }
+                nationality: { type: string }
+                idType: { type: string, enum: [bvn, nin, passport] }
+                idReference: { type: string }
+                companyScreeningDate: { type: string, format: date }
+                companyRiskRating: { type: string, enum: [low, medium] }
+                companyReference: { type: string }
+                expiresAt: { type: string, format: date-time }
+                declarationAccepted: { type: boolean }
+                declarationVersion: { type: string, example: "2026-11" }
+      responses:
+        "201":
+          description: Attestation recorded in `pending_claim`.
+        "400":
+          description: Validation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: The company already holds a current attestation for this email.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/investors/attestations/bulk:
+    post:
+      tags: [House Investors]
+      operationId: houseBulkCreateAttestations
+      summary: Record verified investors in bulk
+      description: >-
+        Up to 500 investors under one declaration. Each row takes the fields of a single record and is checked on
+        its own; one refused row does not stop the others. Requires `house:investors:write`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rows, declarationAccepted, declarationVersion]
+              properties:
+                rows:
+                  type: array
+                  maxItems: 500
+                  items:
+                    type: object
+                    required: [email]
+                    additionalProperties: { type: string }
+                declarationAccepted: { type: boolean }
+                declarationVersion: { type: string, example: "2026-11" }
+      responses:
+        "200":
+          description: Per-row outcome.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created: { type: integer }
+                  refused: { type: integer }
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        row: { type: integer }
+                        email: { type: string }
+                        outcome: { type: string, enum: [created, refused] }
+                        attestationId: { type: string, format: uuid, nullable: true }
+                        claimEmailSent: { type: boolean }
+                        error: { type: string, nullable: true }
+        "400":
+          description: The batch is empty, too large, or the declaration was not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/investors/attestations/{attestationId}:
+    get:
+      tags: [House Investors]
+      operationId: houseGetAttestation
+      summary: Read a verified investor
+      description: Requires `house:investors:read`.
+      parameters:
+        - { name: attestationId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Attestation.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /house/investors/attestations/{attestationId}/{action}:
+    post:
+      tags: [House Investors]
+      operationId: houseActOnAttestation
+      summary: Resend, confirm, renew, or withdraw
+      description: >-
+        `resend` issues a new link while the investor has not accepted. `confirm` completes an email-only
+        attestation after the investor enters their details. `renew` sets a new screening date and validity.
+        `revoke` withdraws the attestation and requires `reason`. Requires `house:investors:write`.
+      parameters:
+        - { name: attestationId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: action, in: path, required: true, schema: { type: string, enum: [resend, confirm, renew, revoke] } }
+      responses:
+        "200":
+          description: Updated attestation.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The attestation is not in a state that allows this action.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":

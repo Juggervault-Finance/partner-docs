@@ -66,11 +66,30 @@ Issuing Houses and Finance Houses that operate deal lifecycle from their own sys
 | Admit investor (`whitelisted`) | `POST .../registrations/{investorId}/approve` | `house:registrations:write` |
 | Settle intent (retired, returns `410`) | `POST .../intents/{intentId}/settle` | `house:settlement:write` |
 | Investor report | `GET /house/offerings/{offeringId}/report` | `house:reports:read` |
+| Record a verified investor | `POST /house/investors/attestations` | `house:investors:write` |
+| Record up to 500 verified investors | `POST /house/investors/attestations/bulk` | `house:investors:write` |
+| List verified investors | `GET /house/investors/attestations` | `house:investors:read` |
+| Read one verified investor | `GET /house/investors/attestations/{attestationId}` | `house:investors:read` |
+| Send a new link | `POST /house/investors/attestations/{attestationId}/resend` | `house:investors:write` |
+| Confirm investor-entered details | `POST /house/investors/attestations/{attestationId}/confirm` | `house:investors:write` |
+| Renew or withdraw | `POST .../attestations/{attestationId}/renew` or `/revoke` | `house:investors:write` |
 
 `open-sale` saves primary-sale terms through the same services as the hosted application, opens registration acceptance when package approval is complete, and returns prepared listing calldata when on-chain listing is still required. It does not bypass factory-admin signatures.
 
 Registration admit performs approve then complete registration so status becomes `whitelisted` and purchase can proceed.
 
 Platform-admin approval steps remain Admin-only. They are not exposed on House routes.
+
+### Verified investors
+
+A house that has already verified an investor under its own AML/CFT programme can record that attestation. The investor can then register for and subscribe to the house's own offerings without repeating Juggervault identity verification. The attestation does not cover offerings owned by any other company.
+
+- Send `email`, `declarationAccepted: true` and the current `declarationVersion` (`2026-11`). With full details, also send `legalFirstName`, `legalLastName`, `dateOfBirth` (`YYYY-MM-DD`), `nationality`, `idType` (`bvn`, `nin` or `passport`), `idReference`, `companyScreeningDate` (within the last 90 days), `companyRiskRating` (`low` or `medium`) and `companyReference`. `expiresAt` is optional and may be at most 12 months ahead.
+- To bring an existing client list, send `rows` (up to 500, each with the same fields as a single record) with one `declarationAccepted` and `declarationVersion` for the batch. Each row is checked on its own. The response lists every row as `created` or `refused`, with the reason for each refusal. Repeat an email in one upload and every copy is refused. The hosted company page accepts the same fields as a CSV file.
+- With the email only, the investor enters their legal details when accepting. The attestation then waits in `pending_company_confirmation` until the house calls `confirm` with the screening date, risk rating, reference and declaration.
+- Juggervault emails the investor a single-use link, valid for 14 days. The link is never returned in the API response; call `resend` to send a new one. The investor must sign in with the same verified email address to accept it.
+- Juggervault runs its own sanctions and PEP screen and, for BVN and NIN, a registry match. A match or an unavailable check holds the attestation in `review_required` for Juggervault compliance. Review details are not disclosed to the house.
+- Withdrawing an attestation (`revoke`, with a `reason`) stops new registrations and subscriptions. Existing holdings, distributions and buybacks are unaffected.
+- Registration and purchase calls for an investor outside the attestation's scope return `403` with `code: "JUGGERVAULT_VERIFICATION_REQUIRED"`.
 
 Broker distribution endpoints under `/investors/*`, `/catalog`, and related paths remain broker-audience only. A House key receives `403` with `This key cannot access broker routes.` A broker key on `/house/*` receives `403` with `This key cannot access house routes.`
