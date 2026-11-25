@@ -92,3 +92,18 @@ If registration is requested before identity verification is approved, the statu
 ```
 
 Other registration refusals keep the message from the registration check. See [Registration](/flows/registration).
+
+## Offering outside the investor's verification
+
+An investor verified by a company (see [Verified investors](/guides/issuing-partners#verified-investors)) may register for and subscribe to that company's offerings only. Registration, admission and purchase for an offering owned by another company return `403`:
+
+```json
+{
+  "error": "Complete Juggervault verification to invest in this offering.",
+  "code": "JUGGERVAULT_VERIFICATION_REQUIRED",
+  "assetId": "…",
+  "kycVerified": false
+}
+```
+
+The investor can complete Juggervault identity verification to invest in any offering. Their existing company verifications remain in place.

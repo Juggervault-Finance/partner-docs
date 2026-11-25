@@ -101,7 +101,12 @@
           "GET /house/offerings/{offeringId}/registrations",
           "POST /house/offerings/{offeringId}/registrations/{investorId}/approve",
           "POST /house/offerings/{offeringId}/intents/{intentId}/settle",
-          "GET /house/offerings/{offeringId}/report"
+          "GET /house/offerings/{offeringId}/report",
+          "GET /house/investors/attestations",
+          "POST /house/investors/attestations",
+          "POST /house/investors/attestations/bulk",
+          "GET /house/investors/attestations/{attestationId}",
+          "POST /house/investors/attestations/{attestationId}/{action}"
         ]
       }
     ]
